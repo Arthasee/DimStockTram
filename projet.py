@@ -5,6 +5,7 @@ RSST = 33 #mOhm
 RHOLAC = 131e-6 # Ohm/m
 RHORAIL = 18e-6 # Ohm/m
 
+fichier = "marche_train.m"
 V = 1 #km/h-1 vitesse du train à déterminer avec le fichier marche_train.m
 M = 70 #tonnes masse du train
 A0 = 780 #N constante forces
