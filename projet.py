@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 #%% Fonction aide
 def readlist(file) : return list(map(float,file.readline().split()))
+# Cette fonction permet simplement de lire une ligne d'un fichier et d'enregister chaque valeur
+# séparé par un espace comme variable
 #%% Création des données
 
 VSST = 790 #Volts
@@ -10,8 +12,8 @@ RSST = 33 #mOhm
 RHOLAC = 131e-6 # Ohm/m
 RHORAIL = 18e-6 # Ohm/m
 
-FICHIER = "marche_train.txt"
-file = open(FICHIER, 'r')
+FICHIER = "marche_train.txt" # nom du fichier dans le dossier
+file = open(FICHIER, 'r') # indique que nous ouvrons le fichier en lecture uniquement
 readedlist = readlist(file)
 
 Time, Position = readedlist
