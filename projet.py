@@ -76,3 +76,8 @@ ax[0].set_ylim([0,1.5])
 ax[2].set_xlabel("t(s)")
 
 plt.show()
+
+#%% Partie électronique
+R1 = RSST + RHOLAC*2000+RHORAIL*2000 # TODO à vérifier
+REQ = R1/2 # Car Somme de résistance en parallèle - 1/Req = 1/R1 + 1/R2 - TODO à vérifier
+Vtrain = 1./2. * (VSST + np.sqrt(VSST**2 - 4*REQ*(VSST**2/(4*REQ)))) # TODO à modifier
