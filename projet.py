@@ -80,4 +80,9 @@ plt.show()
 #%% Partie électronique
 R1 = RSST*1e-3 + RHOLAC*X+RHORAIL*X # TODO à vérifier
 REQ = R1/2 # Car Somme de résistance en parallèle - 1/Req = 1/R1 + 1/R2 - TODO à vérifier
-Vtrain = 1./2. * (VSST + np.sqrt(VSST**2 - 4*REQ*(VSST**2/(4*REQ))))# TODO à modifier
+Vtrain = 1./2. * (VSST + np.sqrt(VSST**2 - 4*REQ*(35*1e3)))# TODO à modifier
+# normalement pour aliment les différents systèmes à bord il faut une puissance constante et égale à 35kW donc PLAC = 35 kW ?
+for i in REQ:
+    if VSST**2/(4*i) < 35*1e3:
+        print("perdu Baptite tu n'as rien compris")
+print(Vtrain)
