@@ -11,20 +11,19 @@ VSST = 790 #Volts
 RSST = 33*1e-3 #mOhm
 RHOLAC = 131e-6 # Ohm/m
 RHORAIL = 18e-6 # Ohm/m
+PLAC = 35*1e3 #W
 
 FICHIER = "marche_train.txt" # nom du fichier dans le dossier
 file = open(FICHIER, 'r') # indique que nous ouvrons le fichier en lecture uniquement
 readedlist = readlist(file)
-
-Time, Position = readedlist
 
 Times = []
 X = []
 
 while readedlist:
     Time, Position = readedlist
-    Times.append(Time) # On convertit en heure
-    X.append(Position) # On convertit en km
+    Times.append(Time)
+    X.append(Position)
     readedlist = readlist(file)
 
 Times = np.array(Times)
@@ -62,32 +61,52 @@ Fm = M*Acc + M*9.81*np.sin(alpha) + FR # Force mécanique - ici alpha = 0
 Pm = Fm*V
 
 #%% Graphique
-fig, ax = plt.subplots(4, 1)
+fig, ax = plt.subplots(3, 1)
 ax[0].plot(Times, X)
 ax[1].plot(Times, V)
-ax[2].plot(Times, Pm)
-ax[3].plot(Times, Acc)
+ax[2].plot(Times, Pm*1e-6)
+ax[2].plot(Times, np.zeros(len(Times)), '--', color='red')
+
+ax[0].set_xlim([0,140])
+ax[1].set_xlim([0,140])
+ax[2].set_xlim([0,140])
+
+ax[0].set_ylabel("x(t) [m]")
+ax[1].set_ylabel("v(t) [m/s]")
+ax[2].set_ylabel("Pm(t) [MW]")
+
+ax[2].set_xlabel("t(s)")
+
+fig.suptitle("Position, Vitesse et Puissance mécanique en fonction du temps")
+
+plt.show()
+
+
+#%% Partie électronique
+R1 = RSST + (RHOLAC+RHORAIL)*2000 # TODO à vérifier
+R1 = np.ones(len(Times))*R1
+REQ = R1**2/(2*R1) # Car Somme de résistance en parallèle - 1/Req = 1/R1 + 1/R2
+Vtrain = (VSST + np.sqrt(VSST**2 - 4*REQ*Pm))/2
+
+Itrain = (VSST - Vtrain)/REQ
+I1 = Itrain * REQ/R1
+PSST = VSST * I1
+
+fig, ax = plt.subplots(3, 1)
+ax[0].plot(Times, X)
+ax[1].plot(Times, Pm*1e-6)
+ax[1].plot(Times, np.zeros(len(Times)), '--', color='red')
+ax[2].plot(Times, Vtrain)
+ax[2].plot(Times, np.ones(len(Times))*500, '--', color='red')
+ax[2].plot(Times, np.ones(len(Times))*790, '--', color='green')
 
 
 ax[0].set_xlim([0,140])
 ax[1].set_xlim([0,140])
 ax[2].set_xlim([0,140])
 
-# ax[0].set_ylim()
-
-ax[2].set_xlabel("t(s)")
+ax[0].set_ylim([0,1300])
+ax[1].set_ylim([-0.8,1.3])
+ax[2].set_ylim([425,950])
 
 plt.show()
-
-#%% Partie électronique
-R1 = RSST + RHOLAC*X+RHORAIL*X # TODO à vérifier
-REQ = R1/2 # Car Somme de résistance en parallèle - 1/Req = 1/R1 + 1/R2 - TODO à vérifier
-Vtrain = 1./2. * (VSST + np.sqrt(VSST**2 - 4*REQ*(35*1e3)))# TODO à modifier
-# normalement pour aliment les différents systèmes à bord il faut une puissance constante et égale à 35kW donc PLAC = 35 kW ?
-for i in REQ:
-    if VSST**2/(4*i) < 35*1e3:
-        print("perdu Baptite tu n'as rien compris")
-print(Vtrain)
-Vtrain = 1./2. * (VSST + np.sqrt(VSST**2 - 4*REQ*(VSST**2/(4*REQ))))# TODO à modifier
-
-#test Dan
