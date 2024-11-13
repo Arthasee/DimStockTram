@@ -88,3 +88,6 @@ for i in REQ:
     if VSST**2/(4*i) < 35*1e3:
         print("perdu Baptite tu n'as rien compris")
 print(Vtrain)
+Vtrain = 1./2. * (VSST + np.sqrt(VSST**2 - 4*REQ*(VSST**2/(4*REQ))))# TODO à modifier
+
+#test Dan
