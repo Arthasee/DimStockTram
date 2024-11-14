@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #%% Fonction aide
-a=4
 def readlist(file) : return list(map(float,file.readline().split()))
 # Cette fonction permet simplement de lire une ligne d'un fichier et d'enregister chaque valeur
 # séparé par un espace comme variable
@@ -39,6 +38,10 @@ Times = []
 X = []
 V = [] #km/h-1 vitesse du train à déterminer avec le fichier marche_train.txt
 Acc = [] #km/h-2 accélération du train à déterminer avec le fichier marche_train.txt
+RLAC1 = [] # valeurs dépendante de x
+RLAC2 = [] # valeurs dépendante de x
+Rrail1 = [] # valeurs dépendante de x
+Rrail2 = [] # valeurs dépendante de x
 
 alpha = 0 # angle de la pente du chemin
 M = 70*1e3 #tonnes masse du train
@@ -90,6 +93,37 @@ Pm = Fm*V
 
 
 #%% Partie électronique
+#Calcul de RLAC1, RLAC2, Rrail1, Rrail2 en fonction de x
+RLAC1.append(0)
+RLAC2.append(0)
+Rrail1.append(0)
+Rrail2.append(0)
+
+for i in range(len(X)-1) :
+    rlac1 = RHOLAC*X[i]
+    RLAC1.append(rlac1)
+
+RLAC1 = np.array(RLAC1)
+
+for i in range(len(X)-1) :
+    rlac2 = RHOLAC*(2000 - X[i])
+    RLAC2.append(rlac2)
+
+RLAC2 = np.array(RLAC2)
+
+for i in range(len(X)-1) :
+    rrail1 = RHORAIL*X[i]
+    Rrail1.append(rrail1)
+
+Rrail1 = np.array(Rrail1)
+
+for i in range(len(X)-1) :
+    rrail2 = RHORAIL*(2000 - X[i])
+    Rrail2.append(rrail2)
+
+Rrail2 = np.array(Rrail2)
+
+
 R1 = RSST + (RHOLAC+RHORAIL)*2000 #TODO Vérifier ici - 2000m distance entre chaque sous-station
 R1 = np.ones(len(Times))*R1
 REQ = R1**2/(2*R1) # Car Somme de résistance en parallèle - 1/Req = 1/R1 + 1/R2
