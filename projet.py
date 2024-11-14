@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #%% Fonction aide
-
+a=4
 def readlist(file) : return list(map(float,file.readline().split()))
 # Cette fonction permet simplement de lire une ligne d'un fichier et d'enregister chaque valeur
 # séparé par un espace comme variable
