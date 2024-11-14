@@ -50,7 +50,7 @@ C0 = 0.3634*(3600**2)/(1e3*1e6) #N/tonnes/(km•h-1)^2 constante inverse vitesse
 C1 = 0.0
 
 #%% Ajout des données du fichier
-
+b = 15247
 FICHIER = "marche_train.txt" # nom du fichier dans le dossier
 file = open(FICHIER, 'r') # indique que nous ouvrons le fichier en lecture uniquement
 readedlist = readlist(file)
