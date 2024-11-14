@@ -28,11 +28,11 @@ def trace(x, y, xlabel, ylabel, titre, xlim=0, ylim=0, save=False, nom=None):
 
 #%% Création et conversion des données
 
+VLAC = 750 #Volts
 VSST = 790 #Volts
 RSST = 33*1e-3 #mOhm
 RHOLAC = 131e-6 # Ohm/m
 RHORAIL = 18e-6 # Ohm/m
-PLAC = 35*1e3 #W
 
 Times = []
 X = []
@@ -42,6 +42,10 @@ RLAC1 = [] # valeurs dépendante de x
 RLAC2 = [] # valeurs dépendante de x
 Rrail1 = [] # valeurs dépendante de x
 Rrail2 = [] # valeurs dépendante de x
+R1 = [] # Résistance équivalente pour la partie supérieure du schéma de Thévenin, traversée par le courant I1
+R2 = [] # Résistance équivalente pour la partie inférieure du schéma de Thévenin, traversée par le courant I2
+Req = [] # Résistance équivalente totale du schéma de Thévenin
+PLAC = [] #dépend de x
 
 alpha = 0 # angle de la pente du chemin
 M = 70*1e3 #tonnes masse du train
@@ -123,12 +127,34 @@ for i in range(len(X)-1) :
 
 Rrail2 = np.array(Rrail2)
 
+# Après simplification du schéma par le théorème de Thévenin calcul de R1, R2 et Req :
+R1.append(0)
+R2.append(0)
+Req.append(0)
 
-R1 = RSST + (RHOLAC+RHORAIL)*2000 #TODO Vérifier ici - 2000m distance entre chaque sous-station
-R1 = np.ones(len(Times))*R1
-REQ = R1**2/(2*R1) # Car Somme de résistance en parallèle - 1/Req = 1/R1 + 1/R2
+for i in range(len(X)-1) :
+    r1 = RSST + RLAC1[i] + Rrail1[i]
+    R1.append(r1)
 
-Vtrain = (VSST + np.sqrt(VSST**2 - 4*REQ*Pm))/2
+R1 = np.array(R1)
+
+for i in range(len(X)-1) :
+    r2 = RSST + RLAC2[i] + Rrail2[i]
+    R2.append(r2)
+
+R2 = np.array(R2)
+
+for i in range(len(X)-1) :
+    req = (R1[i]*R2[i])/(R1[i]+R2[i])
+    Req.append(req)
+
+Req = np.array(Req)
+
+# Calcule de PLAC :
+
+
+
+Vtrain = (VSST + np.sqrt(VSST**2 - 4*Req*PLAC))/2
 
 Itrain = (VSST - Vtrain)/REQ
 I1 = Itrain * REQ/R1
