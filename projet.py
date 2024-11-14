@@ -38,14 +38,18 @@ Times = []
 X = []
 V = [] #km/h-1 vitesse du train à déterminer avec le fichier marche_train.txt
 Acc = [] #km/h-2 accélération du train à déterminer avec le fichier marche_train.txt
-RLAC1 = [] # valeurs dépendante de x
-RLAC2 = [] # valeurs dépendante de x
-Rrail1 = [] # valeurs dépendante de x
-Rrail2 = [] # valeurs dépendante de x
-R1 = [] # Résistance équivalente pour la partie supérieure du schéma de Thévenin, traversée par le courant I1
-R2 = [] # Résistance équivalente pour la partie inférieure du schéma de Thévenin, traversée par le courant I2
-Req = [] # Résistance équivalente totale du schéma de Thévenin
-PLAC = [] #dépend de x
+RLAC1 = [] # Résistance de la LAC entre la sous-station 1 et le train (valeurs dépendante de x)
+RLAC2 = [] # Résistance de la LAC entre la sous-station 2 et le train (valeurs dépendante de x)
+Rrail1 = [] # Résistance du rail entre la sous-station 1 et le train (valeurs dépendante de x)
+Rrail2 = [] # Résistance du rail entre la sous-station 2 et le train (valeurs dépendante de x)
+R1 = [] # Résistance équivalente pour la partie supérieure du schéma de Thévenin, traversée par le courant I1 (dépend de x)
+R2 = [] # Résistance équivalente pour la partie inférieure du schéma de Thévenin, traversée par le courant I2 (dépend de x)
+Req = [] # Résistance équivalente totale du schéma de Thévenin (dépend de x)
+PLAC = [] #Puissance de la LAC (dépend de x)
+Vtrain = [] #Tension du train à tout instant (dépend de x)
+Itrain = [] #Intensité aux bornes du train à tout moment (dépend de x)
+I1 = [] #Intensité de la partie supérieure du schéma de Thévenin
+I2 = [] #Intensité de la partie inférieure du schéma de Thévenin
 
 alpha = 0 # angle de la pente du chemin
 M = 70*1e3 #tonnes masse du train
@@ -150,16 +154,51 @@ for i in range(len(X)-1) :
 
 Req = np.array(Req)
 
-# Calcule de PLAC :
+# Calcul de PLAC :
+PLAC.append(0)
+for i in range(len(X)-1) :
+    plac = VLAC**2/((RLAC1[i]+RLAC2[i])/2) # On a PLAC = VLAC * ILAC, mais on ne connaît pas ILAC. VLAC = RLAC * ILAC donc ILAC = VLAC / RLAC. 
+    #Pour calculer RLAC, je fais la moyenne de RLAC1 et RLAC2
+    PLAC.append(plac)
+
+PLAC = np.array(PLAC)
+
+# Calcul de Vtrain :
+Vtrain.append(0)
+for i in range(len(X)-1):
+    vtrain = (VSST + np.sqrt(VSST**2 - 4*Req[i]*PLAC[i]))/2
+    Vtrain.append(vtrain)
+
+Vtrain = np.array(Vtrain)
+
+# Calcul de Itrain :
+Itrain.append(0)
+for i in range(len(X)-1) :
+    itrain = (VSST - Vtrain[i])/Req[i]
+    Itrain.append(itrain)
+
+Itrain = np.array(Itrain)
+
+# Calcul de I1 : 
+# On sait d'après la loi des mailles que V1 - V2 = 0, donc V1 = V2, donc R1 * I1 = R2 * I2, donc I2 = (R1 * I1)/R2
+# D'après la loi des noeuds, I1 + I2 = Itrain, donc en remplaçant I2 par son expression en fonction de I1 on obtient :
+# I1 + (R1 * I1)/R2 = Itrain, donc I1(R2 + R1)/R2 = Itrain, donc I1 = (R2 * Itrain)/(R1 + R2)
+I1.append(0)
+for i in range(len(X)-1):
+    i1 = (R2[i]*Itrain[i])/(R1[i]+R2[i])
+    I1.append(i1)
+
+I1 = np.array(I1)
+
+# Calcul de I2 :
+I2.append(0)
+for i in range(len(X)-1):
+    i2 = (R1[i]*I1[i])/R2[i]
+    I2.append(i2)
+
+I2 = np.array(I2)
 
 
-
-Vtrain = (VSST + np.sqrt(VSST**2 - 4*Req*PLAC))/2
-
-Itrain = (VSST - Vtrain)/REQ
-I1 = Itrain * REQ/R1
-
-PSST = VSST * I1
 
 #%% Graphique
 
