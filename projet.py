@@ -67,7 +67,7 @@ X = np.array(X)
 
 #%% Calcule vitesse, accélération, forces et puissances
 
-V.append(0)
+V.append(0) #TODO revoir différence fini ordre supérieure
 for i in range(len(X)-1):
     v = (X[i+1]-X[i])/(Times[i+1]-Times[i])
     V.append(v)
@@ -90,7 +90,7 @@ Pm = Fm*V
 
 
 #%% Partie électronique
-R1 = RSST + (RHOLAC+RHORAIL)*2000 #TODO à vérifier - 2000m distance entre chaque sous-station
+R1 = RSST + (RHOLAC+RHORAIL)*2000 #TODO Vérifier ici - 2000m distance entre chaque sous-station
 R1 = np.ones(len(Times))*R1
 REQ = R1**2/(2*R1) # Car Somme de résistance en parallèle - 1/Req = 1/R1 + 1/R2
 
