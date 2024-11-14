@@ -11,19 +11,19 @@ def readlist(file) : return list(map(float,file.readline().split()))
 
 def trace(x, y, xlabel, ylabel, titre, xlim=0, ylim=0, save=False, nom=None):
     fig, ax = plt.subplots(1, 1)
-    
+
     ax.plot(x, y)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     fig.suptitle(titre)
-    
+
     if xlim != 0 and isinstance(xlim, list):
         ax.set_xlim(xlim)
     if ylim != 0 and isinstance(ylim, list):
         ax.set_ylim(ylim)
-    
+
     plt.show()
-    
+
     if save == True and nom != None:
         fig.savefig(nom, dpi=900)
 
