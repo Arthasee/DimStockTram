@@ -198,7 +198,8 @@ for i in range(len(X)-1):
 
 I2 = np.array(I2)
 
-
+# Calcul de la puissance de chaque sous-station : Psst = Vsst*Isst = Vsst**2 / Rsst
+PSST = VSST**2 / RSST
 
 #%% Graphique
 
