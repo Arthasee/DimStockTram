@@ -2,29 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-
-#%% Fonction aide
-def readlist(file) : return list(map(float,file.readline().split()))
-# Cette fonction permet simplement de lire une ligne d'un fichier et d'enregister chaque valeur
-# séparé par un espace comme variable
-
-def trace(x, y, xlabel, ylabel, titre, xlim=0, ylim=0, save=False, nom=None):
-    fig, ax = plt.subplots(1, 1)
-
-    ax.plot(x, y)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    fig.suptitle(titre)
-
-    if xlim != 0 and isinstance(xlim, list):
-        ax.set_xlim(xlim)
-    if ylim != 0 and isinstance(ylim, list):
-        ax.set_ylim(ylim)
-
-    plt.show()
-
-    if save == True and nom != None:
-        fig.savefig(nom, dpi=900)
+from help_function import *
 
 #%% Création et conversion des données
 
@@ -63,40 +41,14 @@ C1 = 0.0
 #%% Ajout des données du fichier
 
 FICHIER = "marche_train.txt" # nom du fichier dans le dossier
-file = open(FICHIER, 'r') # indique que nous ouvrons le fichier en lecture uniquement
-readedlist = readlist(file)
 
-
-while readedlist:
-    Time, Position = readedlist
-    Times.append(Time)
-    X.append(Position)
-    readedlist = readlist(file)
-
-Times = np.array(Times)
-X = np.array(X)
+Times, X = get_T_X(FICHIER)
 
 #%% Calcule vitesse, accélération, forces et puissances
 
-V.append(0) #TODO revoir différence fini ordre supérieure
-for i in range(len(X)-1):
-    if i<2 or i>len(X)-3:
-        v = (X[i+1]-X[i])/(Times[i+1]-Times[i])
-    else:
-        v = (X[i-2] - 8*X[i-1] + 8*X[i+1] - X[i+2])/(12*(Times[i+1]-Times[i]))
-    V.append(v)
+V = get_V(Times, X)
 
-V = np.array(V)
-
-Acc.append(0)
-for i in range(len(X)-1):
-    if i<2 or i>len(X)-3:
-        a = (V[i+1]-V[i])/(Times[i+1]-Times[i])
-    else:
-        a = (V[i-2] - 8*V[i-1] + 8*V[i+1] - V[i+2])/(12*(Times[i+1]-Times[i]))
-    Acc.append(a)
-
-Acc = np.array(Acc)
+Acc = get_Acc(Times, V)
 
 FR = (A0 + A1*M) + (B0 + B1*M)*V + (C0 + C1*M)*V**2 # Force resistive
 
@@ -104,102 +56,29 @@ Fm = M*Acc + M*9.81*np.sin(alpha) + FR # Force mécanique - ici alpha = 0
 
 Pm = Fm*V
 
-
-
 #%% Partie électronique
 #Calcul de RLAC1, RLAC2, Rrail1, Rrail2 en fonction de x
-RLAC1.append(0)
-RLAC2.append(0)
-Rrail1.append(0)
-Rrail2.append(0)
 
-for i in range(1,len(X)) :
-    # if X[i]< 2000: # première sous-station à x = 0
-    #     rlac1 = RHOLAC*X[i]
-    # elif X[i] > 2000 and X[i] < 4000: # deuxième sous-station à x = 2000
-    #     rlac1 = RHOLAC*(X[i]-2000)
-    # else: # Troisième sous-station à x = 4000
-    #     rlac1 = RHOLAC*(X[i]-4000)
-    rlac1 = X[i]*RHOLAC
-    RLAC1.append(rlac1)
+RLAC1 = RHOLAC*X
 
-RLAC1 = np.array(RLAC1)
+RLAC2 = (X[-1] - X)*RHOLAC
 
-for i in range(1,len(X)) :
-    # if X[i] < 2000: # Première sous-station à x = 2000
-    #     rlac2 = RHOLAC*(2000 - X[i])
-    # elif X[i] > 2000 and X[i] < 4000: # deuxième sous-station à x = 4000
-    #     rlac2 = RHOLAC*(4000 - X[i])
-    # else: # troisième sous-station à x = 6000 même si on ne l'atteint pas elle existe
-    #     rlac2 = RHOLAC*(6000 - X[i])
-    rlac2 = (X[-1] - X[i])*RHOLAC
-    RLAC2.append(rlac2)
+Rrail1 = RHORAIL*X
 
-RLAC2 = np.array(RLAC2)
-RLAC2[0] = RLAC2[1]
-
-for i in range(len(X)-1) :
-    # if X[i]< 2000: # première sous-station à x = 0
-    #     rrail1 = RHORAIL*X[i]
-    # elif X[i] > 2000 and X[i] < 4000: # deuxième sous-station à x = 2000
-    #     rrail1 = RHORAIL*(X[i]-2000)
-    # else: # Troisième sous-station à x = 4000
-    #     rrail1 = RHORAIL*(X[i]-4000)
-    rrail1 = RHORAIL*X[i]
-    Rrail1.append(rrail1)
-
-Rrail1 = np.array(Rrail1)
-
-for i in range(len(X)-1) :
-    # if X[i] < 2000: # Première sous-station à x = 2000
-    #     rrail2 = RHORAIL*(2000 - X[i])
-    # elif X[i] > 2000 and X[i] < 4000: # deuxième sous-station à x = 4000
-    #     rrail2 = RHORAIL*(4000 - X[i])
-    # else: # troisième sous-station à x = 6000 même si on ne l'atteint pas elle existe
-    #     rrail2 = RHORAIL*(6000 - X[i])
-    rrail2 = RHORAIL*(X[-1]-X[i])
-    Rrail2.append(rrail2)
-
-Rrail2 = np.array(Rrail2)
-Rrail2[0] = Rrail2[1]
+Rrail2 = (X[-1] - X)*RHORAIL
 
 # Après simplification du schéma par le théorème de Thévenin calcul de R1, R2 et Req :
-R1.append(0)
-R2.append(0)
-Req.append(0)
-
-for i in range(len(X)-1) :
-    r1 = RSST + RLAC1[i] + Rrail1[i]
-    R1.append(r1)
-
-R1 = np.array(R1)
 R1 = RSST + RLAC1 + Rrail1
 
-for i in range(len(X)-1) :
-    r2 = RSST + RLAC2[i] + Rrail2[i]
-    R2.append(r2)
-R2 = np.array(R2)
 R2 = RSST + RLAC2 + Rrail2
 
-for i in range(len(X)-1) :
-    req = (R1[i]*R2[i])/(R1[i]+R2[i])
-    Req.append(req)
-
 Req = (R1*R2)/(R1+R2)
-Req = np.array(Req)
 
 # Calcul de PLAC :
-PLAC.append(0)
-for i in range(len(X)-1) :
-    plac = VLAC**2/((RLAC1[i]+RLAC2[i])) # On a PLAC = VLAC * ILAC, mais on ne connaît pas ILAC. VLAC = RLAC * ILAC donc ILAC = VLAC / RLAC. 
-    #Pour calculer RLAC, je fais la moyenne de RLAC1 et RLAC2
-    PLAC.append(plac)
-PLAC = np.array(PLAC)
 PLAC = VLAC**2/(RLAC1+RLAC2)
 
 # Calcul de Vtrain :
-# Vtrain.append(0)
-for i in range(len(X)): # ici je garde la boucle car je teste si la racine est inférieure à 0 (impossible selon le problème donc on met à 0)
+for i in range(len(X)):
     racine = VSST**2 - 4*Req[i]*(Pm[i]+0.2*PLAC[i])
     if racine < 0:
         racine = 0
@@ -209,32 +88,16 @@ for i in range(len(X)): # ici je garde la boucle car je teste si la racine est i
 Vtrain = np.array(Vtrain)
 
 # Calcul de Itrain :
-Itrain.append(0)
-for i in range(len(X)-1) :
-    itrain = (VSST - Vtrain[i])/Req[i]
-    Itrain.append(itrain)
-Itrain = np.array(Itrain)
 Itrain = VSST - Vtrain/Req
 
 # Calcul de I1 : 
 # On sait d'après la loi des mailles que V1 - V2 = 0, donc V1 = V2, donc R1 * I1 = R2 * I2, donc I2 = (R1 * I1)/R2
 # D'après la loi des noeuds, I1 + I2 = Itrain, donc en remplaçant I2 par son expression en fonction de I1 on obtient :
 # I1 + (R1 * I1)/R2 = Itrain, donc I1(R2 + R1)/R2 = Itrain, donc I1 = (R2 * Itrain)/(R1 + R2)
-I1.append(0)
-for i in range(len(X)-1):
-    i1 = (R2[i]*Itrain[i])/(R1[i]+R2[i])
-    I1.append(i1)
-
-
-I1 = np.array(I1)
+I1 = (R2*Itrain)/(R1+R2)
 
 # Calcul de I2 :
-I2.append(0)
-for i in range(len(X)-1):
-    i2 = (R1[i]*I1[i])/R2[i]
-    I2.append(i2)
-
-I2 = np.array(I2)
+I2 = (R1*I1)/R2
 
 # Calcul de la puissance de chaque sous-station : Psst = Vsst*Isst = Vsst**2 / Rsst
 PSST = VSST**2 / RSST
@@ -293,6 +156,29 @@ fig.suptitle("Position, Puissance mécanique et Tension du train en fonction du 
 
 plt.show()
 fig.savefig("XpmVtrain.pdf", dpi=900)
+
+fig, ax = plt.subplots(2, 1)
+ax[0].plot(Times, Pm)
+ax[1].plot(Times, PLAC)
+
+fig.suptitle("Les Puissances en fonction du temps")
+plt.show()
+
+fig, ax = plt.subplots(3, 1)
+ax[0].plot(Times, R1)
+ax[1].plot(Times, R2)
+ax[2].plot(Times, Req)
+
+fig.suptitle("Les Résistances R1, R2 et Req en fonction du temps")
+plt.show()
+
+fig, ax = plt.subplots(3, 1)
+ax[0].plot(Times, I1)
+ax[1].plot(Times, I2)
+ax[2].plot(Times, Itrain)
+
+fig.suptitle("Les Intensités I1, I2 et Itrain en fonction du temps")
+plt.show()
 
 # trace(Times, Acc, "Temps [s]", "Accélération [$m/s^2$]", "Accélération en fonction du temps", [0, 140], [min(Acc[:140])-10,max(Acc[:140])+10], save=True, nom = "Acc.pdf")
 # trace(Times, PLAC, "Temps [s]", "PLAC", "PLAC en fonction du temps", save=True, nom = "PLAC.pdf")
