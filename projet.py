@@ -107,29 +107,55 @@ RLAC2.append(0)
 Rrail1.append(0)
 Rrail2.append(0)
 
-for i in range(len(X)-1) :
-    rlac1 = RHOLAC*X[i]
+for i in range(1,len(X)) :
+    # if X[i]< 2000: # première sous-station à x = 0
+    #     rlac1 = RHOLAC*X[i]
+    # elif X[i] > 2000 and X[i] < 4000: # deuxième sous-station à x = 2000
+    #     rlac1 = RHOLAC*(X[i]-2000)
+    # else: # Troisième sous-station à x = 4000
+    #     rlac1 = RHOLAC*(X[i]-4000)
+    rlac1 = X[i]*RHOLAC
     RLAC1.append(rlac1)
 
 RLAC1 = np.array(RLAC1)
 
-for i in range(len(X)-1) :
-    rlac2 = RHOLAC*(2000 - X[i])
+for i in range(1,len(X)) :
+    # if X[i] < 2000: # Première sous-station à x = 2000
+    #     rlac2 = RHOLAC*(2000 - X[i])
+    # elif X[i] > 2000 and X[i] < 4000: # deuxième sous-station à x = 4000
+    #     rlac2 = RHOLAC*(4000 - X[i])
+    # else: # troisième sous-station à x = 6000 même si on ne l'atteint pas elle existe
+    #     rlac2 = RHOLAC*(6000 - X[i])
+    rlac2 = (X[-1] - X[i])*RHOLAC
     RLAC2.append(rlac2)
 
 RLAC2 = np.array(RLAC2)
+RLAC2[0] = RLAC2[1]
 
 for i in range(len(X)-1) :
+    # if X[i]< 2000: # première sous-station à x = 0
+    #     rrail1 = RHORAIL*X[i]
+    # elif X[i] > 2000 and X[i] < 4000: # deuxième sous-station à x = 2000
+    #     rrail1 = RHORAIL*(X[i]-2000)
+    # else: # Troisième sous-station à x = 4000
+    #     rrail1 = RHORAIL*(X[i]-4000)
     rrail1 = RHORAIL*X[i]
     Rrail1.append(rrail1)
 
 Rrail1 = np.array(Rrail1)
 
 for i in range(len(X)-1) :
-    rrail2 = RHORAIL*(2000 - X[i])
+    # if X[i] < 2000: # Première sous-station à x = 2000
+    #     rrail2 = RHORAIL*(2000 - X[i])
+    # elif X[i] > 2000 and X[i] < 4000: # deuxième sous-station à x = 4000
+    #     rrail2 = RHORAIL*(4000 - X[i])
+    # else: # troisième sous-station à x = 6000 même si on ne l'atteint pas elle existe
+    #     rrail2 = RHORAIL*(6000 - X[i])
+    rrail2 = RHORAIL*(X[-1]-X[i])
     Rrail2.append(rrail2)
 
 Rrail2 = np.array(Rrail2)
+Rrail2[0] = Rrail2[1]
 
 # Après simplification du schéma par le théorème de Thévenin calcul de R1, R2 et Req :
 R1.append(0)
@@ -141,32 +167,37 @@ for i in range(len(X)-1) :
     R1.append(r1)
 
 R1 = np.array(R1)
+R1 = RSST + RLAC1 + Rrail1
 
 for i in range(len(X)-1) :
     r2 = RSST + RLAC2[i] + Rrail2[i]
     R2.append(r2)
-
 R2 = np.array(R2)
+R2 = RSST + RLAC2 + Rrail2
 
 for i in range(len(X)-1) :
     req = (R1[i]*R2[i])/(R1[i]+R2[i])
     Req.append(req)
 
+Req = (R1*R2)/(R1+R2)
 Req = np.array(Req)
 
 # Calcul de PLAC :
 PLAC.append(0)
 for i in range(len(X)-1) :
-    plac = VLAC**2/((RLAC1[i]+RLAC2[i])/2) # On a PLAC = VLAC * ILAC, mais on ne connaît pas ILAC. VLAC = RLAC * ILAC donc ILAC = VLAC / RLAC. 
+    plac = VLAC**2/((RLAC1[i]+RLAC2[i])) # On a PLAC = VLAC * ILAC, mais on ne connaît pas ILAC. VLAC = RLAC * ILAC donc ILAC = VLAC / RLAC. 
     #Pour calculer RLAC, je fais la moyenne de RLAC1 et RLAC2
     PLAC.append(plac)
-
 PLAC = np.array(PLAC)
+PLAC = VLAC**2/(RLAC1+RLAC2)
 
 # Calcul de Vtrain :
-Vtrain.append(0)
-for i in range(len(X)-1):
-    vtrain = (VSST + np.sqrt(VSST**2 - 4*Req[i]*PLAC[i]))/2
+# Vtrain.append(0)
+for i in range(len(X)): # ici je garde la boucle car je teste si la racine est inférieure à 0 (impossible selon le problème donc on met à 0)
+    racine = VSST**2 - 4*Req[i]*(Pm[i]+0.2*PLAC[i])
+    if racine < 0:
+        racine = 0
+    vtrain = (VSST + np.sqrt(racine))/2
     Vtrain.append(vtrain)
 
 Vtrain = np.array(Vtrain)
@@ -176,8 +207,8 @@ Itrain.append(0)
 for i in range(len(X)-1) :
     itrain = (VSST - Vtrain[i])/Req[i]
     Itrain.append(itrain)
-
 Itrain = np.array(Itrain)
+Itrain = VSST - Vtrain/Req
 
 # Calcul de I1 : 
 # On sait d'après la loi des mailles que V1 - V2 = 0, donc V1 = V2, donc R1 * I1 = R2 * I2, donc I2 = (R1 * I1)/R2
@@ -187,6 +218,7 @@ I1.append(0)
 for i in range(len(X)-1):
     i1 = (R2[i]*Itrain[i])/(R1[i]+R2[i])
     I1.append(i1)
+
 
 I1 = np.array(I1)
 
@@ -256,4 +288,5 @@ fig.suptitle("Position, Puissance mécanique et Tension du train en fonction du 
 plt.show()
 fig.savefig("XpmVtrain.pdf", dpi=900)
 
-trace(Times, Acc, "Temps [s]", "Accélération [$m/s^2$]", "Accélération en fonction du temps", [0, 140], [min(Acc[:140])-10,max(Acc[:140])+10], save=True, nom = "Acc.pdf")
+# trace(Times, Acc, "Temps [s]", "Accélération [$m/s^2$]", "Accélération en fonction du temps", [0, 140], [min(Acc[:140])-10,max(Acc[:140])+10], save=True, nom = "Acc.pdf")
+# trace(Times, PLAC, "Temps [s]", "PLAC", "PLAC en fonction du temps", save=True, nom = "PLAC.pdf")
