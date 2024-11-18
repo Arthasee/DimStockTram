@@ -35,7 +35,7 @@ A0 = 780 #N constante forces
 A1 = 6.4*1e-3 #N/tonnes constante accélération
 B0 = 0.0 # constante nulle ?
 B1 = 0.14*3600/(1e3*1e3) #N/tonnes/(km•h-1) constante
-C0 = 0.3634*(3600**2)/(1e3*1e6) #N/tonnes/(km•h-1)^2 constante inverse vitesse
+C0 = 0.3634*(3600**2)/(1e6) #N/(km•h-1)^2 constante inverse vitesse
 C1 = 0.0
 
 #%% Ajout des données du fichier
@@ -79,7 +79,10 @@ PLAC = VLAC**2/(RLAC1+RLAC2)
 
 # Calcul de Vtrain :
 for i in range(len(X)):
-    racine = VSST**2 - 4*Req[i]*(Pm[i]+0.2*PLAC[i])
+    if Pm[i]<0:
+        racine = VSST**2 - 4*Req[i]*(Pm[i]*0.8)
+    else:
+        racine = VSST**2 - 4*Req[i]*(Pm[i]/0.8)
     if racine < 0:
         racine = 0
     vtrain = (VSST + np.sqrt(racine))/2
@@ -159,7 +162,7 @@ fig.savefig("XpmVtrain.pdf", dpi=900)
 
 fig, ax = plt.subplots(2, 1)
 ax[0].plot(Times, Pm)
-ax[1].plot(Times, PLAC)
+# ax[1].plot(Times, PLAC)
 
 fig.suptitle("Les Puissances en fonction du temps")
 plt.show()
@@ -187,12 +190,29 @@ plt.show()
 
 Pbatt = []
 Ebatt = []
-Prheos = []
-
+Ebatt0 = 2500 /3600
+Ebatt.append(Ebatt0)
+Prheos = np.zeros(len(Pm))
 for i in range(len(Pm)):
-    if Pm[i]< 0:
-        Pbatt[i] = -0.8*Pm[i]
-        Prheos[i] = -0.2*Pm[i]
-        Pm[i] = 0
-    if ((Acc[i-1] - Acc[i-2])<0.1) and (Acc[i]-Acc[i-1])>0.1:
-        Pm[i] = tg
+    if Pm[i]<0 or V[i]==0:
+        Pbatt.append(Pm[i]/0.8)
+        Ebatt.append(Ebatt0 - methode_trapeze(Pbatt))
+        if Ebatt[i] >= 5000:
+            Ebatt[i] = 5000
+            Prheos[i] = Pbatt[i]
+        PLAC[i] = Pm[i] - Pbatt[i] + Prheos[i]
+    elif Vtrain[i]<700:
+        Pbatt.append(Pm[i]*0.8)
+        Ebatt.append(Ebatt0- methode_trapeze(Pbatt))
+        if Ebatt[i] >= 5000:
+            Ebatt[i] = 5000
+            Prheos[i] = Pbatt[i]
+        PLAC[i] = Pm[i] - Pbatt[i] + Prheos[i]
+    else:
+        Pbatt.append(Pbatt[i-1])
+        Ebatt.append(Ebatt0 - methode_trapeze(Pbatt))
+        PLAC[i] = Pm[i] - Pbatt[i] + Prheos[i]
+
+trace(Times, Ebatt*3600, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps")
+trace(Times, PLAC, "Temps[s]", "Pm", "Pm avec batterie en fonction du temps")
+
