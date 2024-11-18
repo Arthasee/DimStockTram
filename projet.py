@@ -107,81 +107,81 @@ PSST = VSST**2 / RSST
 
 #%% Graphique
 
-fig, ax = plt.subplots(3, 1)
-ax[0].plot(Times, X)
-ax[1].plot(Times, V)
-ax[2].plot(Times, Pm*1e-6)
-ax[2].plot(Times, np.zeros(len(Times)), '--', color='red')
+# fig, ax = plt.subplots(3, 1)
+# ax[0].plot(Times, X)
+# ax[1].plot(Times, V)
+# ax[2].plot(Times, Pm*1e-6)
+# ax[2].plot(Times, np.zeros(len(Times)), '--', color='red')
 
-ax[0].set_xlim([0,145])
-ax[1].set_xlim([0,145])
-ax[2].set_xlim([0,145])
+# ax[0].set_xlim([0,145])
+# ax[1].set_xlim([0,145])
+# ax[2].set_xlim([0,145])
 
-ax[0].set_ylim([0,1300])
-ax[2].set_ylim([-1,1.3])
-
-
-ax[0].set_ylabel("x(t) [m]")
-ax[1].set_ylabel("v(t) [m/s]")
-ax[2].set_ylabel("Pm(t) [MW]")
-
-ax[2].set_xlabel("t [s]")
-
-fig.suptitle("Position, Vitesse et Puissance mécanique en fonction du temps")
-
-plt.show()
-fig.savefig("XVPm.pdf", dpi=900)
-
-fig, ax = plt.subplots(3, 1)
-ax[0].plot(Times, X)
-ax[1].plot(Times, Pm*1e-6)
-ax[1].plot(Times, np.zeros(len(Times)), '--', color='red')
-ax[2].plot(Times, Vtrain)
-ax[2].plot(Times, np.ones(len(Times))*500, '--', color='red')
-ax[2].plot(Times, np.ones(len(Times))*790, '--', color='green')
+# ax[0].set_ylim([0,1300])
+# ax[2].set_ylim([-1,1.3])
 
 
-ax[0].set_xlim([0,145])
-ax[1].set_xlim([0,145])
-ax[2].set_xlim([0,145])
+# ax[0].set_ylabel("x(t) [m]")
+# ax[1].set_ylabel("v(t) [m/s]")
+# ax[2].set_ylabel("Pm(t) [MW]")
 
-ax[0].set_ylim([0,1300])
-ax[1].set_ylim([-1,1.3])
-ax[2].set_ylim([425,950])
+# ax[2].set_xlabel("t [s]")
 
-ax[0].set_ylabel("x(t) [m]")
-ax[1].set_ylabel("Pm(t) [MW]")
-ax[2].set_ylabel("Vtrain(t) [V]")
+# fig.suptitle("Position, Vitesse et Puissance mécanique en fonction du temps")
 
-ax[2].set_xlabel("t [s]")
+# plt.show()
+# fig.savefig("XVPm.pdf", dpi=900)
 
-fig.suptitle("Position, Puissance mécanique et Tension du train en fonction du temps")
+# fig, ax = plt.subplots(3, 1)
+# ax[0].plot(Times, X)
+# ax[1].plot(Times, Pm*1e-6)
+# ax[1].plot(Times, np.zeros(len(Times)), '--', color='red')
+# ax[2].plot(Times, Vtrain)
+# ax[2].plot(Times, np.ones(len(Times))*500, '--', color='red')
+# ax[2].plot(Times, np.ones(len(Times))*790, '--', color='green')
 
-plt.show()
-fig.savefig("XpmVtrain.pdf", dpi=900)
 
-fig, ax = plt.subplots(2, 1)
-ax[0].plot(Times, Pm)
-# ax[1].plot(Times, PLAC)
+# ax[0].set_xlim([0,145])
+# ax[1].set_xlim([0,145])
+# ax[2].set_xlim([0,145])
 
-fig.suptitle("Les Puissances en fonction du temps")
-plt.show()
+# ax[0].set_ylim([0,1300])
+# ax[1].set_ylim([-1,1.3])
+# ax[2].set_ylim([425,950])
 
-fig, ax = plt.subplots(3, 1)
-ax[0].plot(Times, R1)
-ax[1].plot(Times, R2)
-ax[2].plot(Times, Req)
+# ax[0].set_ylabel("x(t) [m]")
+# ax[1].set_ylabel("Pm(t) [MW]")
+# ax[2].set_ylabel("Vtrain(t) [V]")
 
-fig.suptitle("Les Résistances R1, R2 et Req en fonction du temps")
-plt.show()
+# ax[2].set_xlabel("t [s]")
 
-fig, ax = plt.subplots(3, 1)
-ax[0].plot(Times, I1)
-ax[1].plot(Times, I2)
-ax[2].plot(Times, Itrain)
+# fig.suptitle("Position, Puissance mécanique et Tension du train en fonction du temps")
 
-fig.suptitle("Les Intensités I1, I2 et Itrain en fonction du temps")
-plt.show()
+# plt.show()
+# fig.savefig("XpmVtrain.pdf", dpi=900)
+
+# fig, ax = plt.subplots(2, 1)
+# ax[0].plot(Times, Pm)
+# # ax[1].plot(Times, PLAC)
+
+# fig.suptitle("Les Puissances en fonction du temps")
+# plt.show()
+
+# fig, ax = plt.subplots(3, 1)
+# ax[0].plot(Times, R1)
+# ax[1].plot(Times, R2)
+# ax[2].plot(Times, Req)
+
+# fig.suptitle("Les Résistances R1, R2 et Req en fonction du temps")
+# plt.show()
+
+# fig, ax = plt.subplots(3, 1)
+# ax[0].plot(Times, I1)
+# ax[1].plot(Times, I2)
+# ax[2].plot(Times, Itrain)
+
+# fig.suptitle("Les Intensités I1, I2 et Itrain en fonction du temps")
+# plt.show()
 
 # trace(Times, Acc, "Temps [s]", "Accélération [$m/s^2$]", "Accélération en fonction du temps", [0, 140], [-2,2], save=True, nom = "Acc.pdf")
 # trace(Times, PLAC, "Temps [s]", "PLAC", "PLAC en fonction du temps", save=True, nom = "PLAC.pdf")
@@ -189,30 +189,53 @@ plt.show()
 #%% Batterie
 
 Pbatt = []
-Ebatt = []
-Ebatt0 = 2500 /3600
-Ebatt.append(Ebatt0)
+Ebatt = np.zeros(len(Pm))
+Ebatt0 = 250000 /3600
+EbattMAX = 500000/3600
+Ebatt[0] = Ebatt0
 Prheos = np.zeros(len(Pm))
-for i in range(len(Pm)):
-    if Pm[i]<0 or V[i]==0:
-        Pbatt.append(Pm[i]/0.8)
-        Ebatt.append(Ebatt0 - methode_trapeze(Pbatt))
-        if Ebatt[i] >= 5000:
-            Ebatt[i] = 5000
-            Prheos[i] = Pbatt[i]
-        PLAC[i] = Pm[i] - Pbatt[i] + Prheos[i]
-    elif Vtrain[i]<700:
+
+for i, pm in enumerate(Pm):
+    if Pm[i]<0 or V[i]==0 or Acc[i] - Acc[i-1] < 0:
         Pbatt.append(Pm[i]*0.8)
-        Ebatt.append(Ebatt0- methode_trapeze(Pbatt))
-        if Ebatt[i] >= 5000:
-            Ebatt[i] = 5000
+        Ebatt[i] = Ebatt0 - methode_trapeze(Pbatt)
+        if Ebatt[i] >= EbattMAX:
+            Ebatt[i] = EbattMAX
             Prheos[i] = Pbatt[i]
         PLAC[i] = Pm[i] - Pbatt[i] + Prheos[i]
+        if PLAC[i] < 0:
+            PLAC[i] = 0
+    elif Vtrain[i]<700 or (Acc[i] - Acc[i-1] > 0.1):
+        Pbatt.append(Pm[i]/0.8)
+        Ebatt[i] = Ebatt0- methode_trapeze(Pbatt)
+        if Ebatt[i] >= EbattMAX:
+            Ebatt[i] = EbattMAX
+            Prheos[i] = Pbatt[i]
+        PLAC[i] = Pm[i] - Pbatt[i] + Prheos[i]
+        if PLAC[i] < 0:
+            PLAC[i] = 0
     else:
         Pbatt.append(Pbatt[i-1])
-        Ebatt.append(Ebatt0 - methode_trapeze(Pbatt))
+        Ebatt[i] = Ebatt0 - methode_trapeze(Pbatt)
+        if Ebatt[i] >= EbattMAX:
+            Ebatt[i] = EbattMAX
+            Prheos[i] = Pbatt[i]
         PLAC[i] = Pm[i] - Pbatt[i] + Prheos[i]
+        if PLAC[i] < 0:
+            PLAC[i] = 0
 
-trace(Times, Ebatt*3600, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps")
-trace(Times, PLAC, "Temps[s]", "Pm", "Pm avec batterie en fonction du temps")
+trace(Times, Ebatt*3600, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps", [0, 140])
+trace(Times, PLAC, "Temps[s]", "PLAC", "Pm avec batterie en fonction du temps", [0, 140])
+trace(Times, Pbatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps", [0, 140])
 
+VtrainBatt = []
+for i in range(len(X)):
+    if PLAC[i]<0:
+        racine = VSST**2 - 4*Req[i]*(PLAC[i]*0.8)
+    else:
+        racine = VSST**2 - 4*Req[i]*(PLAC[i]/0.8)
+    if racine < 0:
+        racine = 0
+    vtrain = (VSST + np.sqrt(racine))/2
+    VtrainBatt.append(vtrain)
+trace(Times, VtrainBatt, "Temps[s]", "Vtrain", "Vtrain avec batterie en fonction du temps", [0, 140])
