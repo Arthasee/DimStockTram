@@ -68,3 +68,18 @@ def get_Acc(Times,V):
 
     Acc = np.array(Acc)
     return Acc
+
+# méthode des trapèze pour résoudre l'integral de P batterie de t0 à t
+def methode_trapeze(fonction_a_integre):
+    
+    a=0
+    b=10
+    n=100
+    somme=0
+    h= (b-a)/n
+    for i in range(1,n):
+        aire=(fonction_a_integre(a)+fonction_a_integre(a+h))*h/2
+        somme+=aire
+        a+=h
+        i+=1
+    return somme

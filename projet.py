@@ -180,5 +180,19 @@ ax[2].plot(Times, Itrain)
 fig.suptitle("Les Intensités I1, I2 et Itrain en fonction du temps")
 plt.show()
 
-# trace(Times, Acc, "Temps [s]", "Accélération [$m/s^2$]", "Accélération en fonction du temps", [0, 140], [min(Acc[:140])-10,max(Acc[:140])+10], save=True, nom = "Acc.pdf")
+# trace(Times, Acc, "Temps [s]", "Accélération [$m/s^2$]", "Accélération en fonction du temps", [0, 140], [-2,2], save=True, nom = "Acc.pdf")
 # trace(Times, PLAC, "Temps [s]", "PLAC", "PLAC en fonction du temps", save=True, nom = "PLAC.pdf")
+
+#%% Batterie
+
+Pbatt = []
+Ebatt = []
+Prheos = []
+
+for i in range(len(Pm)):
+    if Pm[i]< 0:
+        Pbatt[i] = -0.8*Pm[i]
+        Prheos[i] = -0.2*Pm[i]
+        Pm[i] = 0
+    if ((Acc[i-1] - Acc[i-2])<0.1) and (Acc[i]-Acc[i-1])>0.1:
+        Pm[i] = tg
