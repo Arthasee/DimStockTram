@@ -2,43 +2,32 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-
-#%% Fonction aide
-
-def readlist(file) : return list(map(float,file.readline().split()))
-# Cette fonction permet simplement de lire une ligne d'un fichier et d'enregister chaque valeur
-# séparé par un espace comme variable
-
-def trace(x, y, xlabel, ylabel, titre, xlim=0, ylim=0, save=False, nom=None):
-    fig, ax = plt.subplots(1, 1)
-
-    ax.plot(x, y)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    fig.suptitle(titre)
-
-    if xlim != 0 and isinstance(xlim, list):
-        ax.set_xlim(xlim)
-    if ylim != 0 and isinstance(ylim, list):
-        ax.set_ylim(ylim)
-
-    plt.show()
-
-    if save == True and nom != None:
-        fig.savefig(nom, dpi=900)
+from help_function import *
 
 #%% Création et conversion des données
 
+VLAC = 750 #Volts
 VSST = 790 #Volts
 RSST = 33*1e-3 #mOhm
 RHOLAC = 131e-6 # Ohm/m
 RHORAIL = 18e-6 # Ohm/m
-PLAC = 35*1e3 #W
 
 Times = []
 X = []
 V = [] #km/h-1 vitesse du train à déterminer avec le fichier marche_train.txt
 Acc = [] #km/h-2 accélération du train à déterminer avec le fichier marche_train.txt
+RLAC1 = [] # Résistance de la LAC entre la sous-station 1 et le train (valeurs dépendante de x)
+RLAC2 = [] # Résistance de la LAC entre la sous-station 2 et le train (valeurs dépendante de x)
+Rrail1 = [] # Résistance du rail entre la sous-station 1 et le train (valeurs dépendante de x)
+Rrail2 = [] # Résistance du rail entre la sous-station 2 et le train (valeurs dépendante de x)
+R1 = [] # Résistance équivalente pour la partie supérieure du schéma de Thévenin, traversée par le courant I1 (dépend de x)
+R2 = [] # Résistance équivalente pour la partie inférieure du schéma de Thévenin, traversée par le courant I2 (dépend de x)
+Req = [] # Résistance équivalente totale du schéma de Thévenin (dépend de x)
+PLAC = [] #Puissance de la LAC (dépend de x)
+Vtrain = [] #Tension du train à tout instant (dépend de x)
+Itrain = [] #Intensité aux bornes du train à tout moment (dépend de x)
+I1 = [] #Intensité de la partie supérieure du schéma de Thévenin
+I2 = [] #Intensité de la partie inférieure du schéma de Thévenin
 
 alpha = 0 # angle de la pente du chemin
 M = 70*1e3 #tonnes masse du train
@@ -52,34 +41,14 @@ C1 = 0.0
 #%% Ajout des données du fichier
 
 FICHIER = "marche_train.txt" # nom du fichier dans le dossier
-file = open(FICHIER, 'r') # indique que nous ouvrons le fichier en lecture uniquement
-readedlist = readlist(file)
 
-
-while readedlist:
-    Time, Position = readedlist
-    Times.append(Time)
-    X.append(Position)
-    readedlist = readlist(file)
-
-Times = np.array(Times)
-X = np.array(X)
+Times, X = get_T_X(FICHIER)
 
 #%% Calcule vitesse, accélération, forces et puissances
 
-V.append(0) #TODO revoir différence fini ordre supérieure
-for i in range(len(X)-1):
-    v = (X[i+1]-X[i])/(Times[i+1]-Times[i])
-    V.append(v)
+V = get_V(Times, X)
 
-V = np.array(V)
-
-Acc.append(0)
-for i in range(len(X)-1):
-    a = (V[i+1]-V[i])/(Times[i+1]-Times[i])
-    Acc.append(a)
-
-Acc = np.array(Acc)
+Acc = get_Acc(Times, V)
 
 FR = (A0 + A1*M) + (B0 + B1*M)*V + (C0 + C1*M)*V**2 # Force resistive
 
@@ -87,19 +56,51 @@ Fm = M*Acc + M*9.81*np.sin(alpha) + FR # Force mécanique - ici alpha = 0
 
 Pm = Fm*V
 
-
-
 #%% Partie électronique
-R1 = RSST + (RHOLAC+RHORAIL)*2000 #TODO Vérifier ici - 2000m distance entre chaque sous-station
-R1 = np.ones(len(Times))*R1
-REQ = R1**2/(2*R1) # Car Somme de résistance en parallèle - 1/Req = 1/R1 + 1/R2
+#Calcul de RLAC1, RLAC2, Rrail1, Rrail2 en fonction de x
 
-Vtrain = (VSST + np.sqrt(VSST**2 - 4*REQ*Pm))/2
+RLAC1 = RHOLAC*X
 
-Itrain = (VSST - Vtrain)/REQ
-I1 = Itrain * REQ/R1
+RLAC2 = (X[-1] - X)*RHOLAC
 
-PSST = VSST * I1
+Rrail1 = RHORAIL*X
+
+Rrail2 = (X[-1] - X)*RHORAIL
+
+# Après simplification du schéma par le théorème de Thévenin calcul de R1, R2 et Req :
+R1 = RSST + RLAC1 + Rrail1
+
+R2 = RSST + RLAC2 + Rrail2
+
+Req = (R1*R2)/(R1+R2)
+
+# Calcul de PLAC :
+PLAC = VLAC**2/(RLAC1+RLAC2)
+
+# Calcul de Vtrain :
+for i in range(len(X)):
+    racine = VSST**2 - 4*Req[i]*(Pm[i]+0.2*PLAC[i])
+    if racine < 0:
+        racine = 0
+    vtrain = (VSST + np.sqrt(racine))/2
+    Vtrain.append(vtrain)
+
+Vtrain = np.array(Vtrain)
+
+# Calcul de Itrain :
+Itrain = VSST - Vtrain/Req
+
+# Calcul de I1 : 
+# On sait d'après la loi des mailles que V1 - V2 = 0, donc V1 = V2, donc R1 * I1 = R2 * I2, donc I2 = (R1 * I1)/R2
+# D'après la loi des noeuds, I1 + I2 = Itrain, donc en remplaçant I2 par son expression en fonction de I1 on obtient :
+# I1 + (R1 * I1)/R2 = Itrain, donc I1(R2 + R1)/R2 = Itrain, donc I1 = (R2 * Itrain)/(R1 + R2)
+I1 = (R2*Itrain)/(R1+R2)
+
+# Calcul de I2 :
+I2 = (R1*I1)/R2
+
+# Calcul de la puissance de chaque sous-station : Psst = Vsst*Isst = Vsst**2 / Rsst
+PSST = VSST**2 / RSST
 
 #%% Graphique
 
@@ -156,4 +157,28 @@ fig.suptitle("Position, Puissance mécanique et Tension du train en fonction du 
 plt.show()
 fig.savefig("XpmVtrain.pdf", dpi=900)
 
-trace(Times, Acc, "Temps [s]", "Accélération [$m/s^2$]", "Accélération en fonction du temps", [0, 140], [min(Acc[:140])-10,max(Acc[:140])+10], save=True, nom = "Acc.pdf")
+fig, ax = plt.subplots(2, 1)
+ax[0].plot(Times, Pm)
+ax[1].plot(Times, PLAC)
+
+fig.suptitle("Les Puissances en fonction du temps")
+plt.show()
+
+fig, ax = plt.subplots(3, 1)
+ax[0].plot(Times, R1)
+ax[1].plot(Times, R2)
+ax[2].plot(Times, Req)
+
+fig.suptitle("Les Résistances R1, R2 et Req en fonction du temps")
+plt.show()
+
+fig, ax = plt.subplots(3, 1)
+ax[0].plot(Times, I1)
+ax[1].plot(Times, I2)
+ax[2].plot(Times, Itrain)
+
+fig.suptitle("Les Intensités I1, I2 et Itrain en fonction du temps")
+plt.show()
+
+# trace(Times, Acc, "Temps [s]", "Accélération [$m/s^2$]", "Accélération en fonction du temps", [0, 140], [min(Acc[:140])-10,max(Acc[:140])+10], save=True, nom = "Acc.pdf")
+# trace(Times, PLAC, "Temps [s]", "PLAC", "PLAC en fonction du temps", save=True, nom = "PLAC.pdf")
