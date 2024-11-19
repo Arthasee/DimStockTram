@@ -190,46 +190,32 @@ PSST = VSST**2 / RSST
 
 Pbatt = []
 Ebatt = np.zeros(len(Pm))
-Ebatt0 = 250000 /3600
+Ebatt0 = 500000 /3600
 EbattMAX = 500000/3600
 Ebatt[0] = Ebatt0
 Prheos = np.zeros(len(Pm))
 
+Pelec = []
+VtrainBatt = []
 for i, pm in enumerate(Pm):
-    if Pm[i]<0 or V[i]==0 or Acc[i] - Acc[i-1] < 0:
-        Pbatt.append(Pm[i]*0.8)
+    if Pm[i]<0:
+        Pelec.append(Pm[i]*0.8)
+    else:
+        Pelec.append(Pm[i]/0.8)
+    if Pelec[i]<0 or V[i]==0 or Acc[i] - Acc[i-1] < 0:
+        Pbatt.append(Pelec[i])
         Ebatt[i] = Ebatt0 - methode_trapeze(Pbatt)
-        if Ebatt[i] >= EbattMAX:
-            Ebatt[i] = EbattMAX
-            Prheos[i] = Pbatt[i]
-        PLAC[i] = Pm[i] - Pbatt[i] + Prheos[i]
-        if PLAC[i] < 0:
-            PLAC[i] = 0
-    elif Vtrain[i]<700 or (Acc[i] - Acc[i-1] > 0.1):
-        Pbatt.append(Pm[i]/0.8)
-        Ebatt[i] = Ebatt0- methode_trapeze(Pbatt)
-        if Ebatt[i] >= EbattMAX:
-            Ebatt[i] = EbattMAX
-            Prheos[i] = Pbatt[i]
-        PLAC[i] = Pm[i] - Pbatt[i] + Prheos[i]
-        if PLAC[i] < 0:
-            PLAC[i] = 0
+    elif Vtrain[i]<500 or (Acc[i] - Acc[i-1] > 0.1):
+        Pbatt.append(Pelec[i])
     else:
         Pbatt.append(Pbatt[i-1])
         Ebatt[i] = Ebatt0 - methode_trapeze(Pbatt)
-        if Ebatt[i] >= EbattMAX:
-            Ebatt[i] = EbattMAX
-            Prheos[i] = Pbatt[i]
-        PLAC[i] = Pm[i] - Pbatt[i] + Prheos[i]
-        if PLAC[i] < 0:
-            PLAC[i] = 0
-
-trace(Times, Ebatt*3600, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps", [0, 140])
-trace(Times, PLAC, "Temps[s]", "PLAC", "Pm avec batterie en fonction du temps", [0, 140])
-trace(Times, Pbatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps", [0, 140])
-
-VtrainBatt = []
-for i in range(len(X)):
+    if Ebatt[i] >= EbattMAX:
+        Ebatt[i] = EbattMAX
+        Prheos[i] = Pbatt[i]
+    PLAC[i] = Pelec[i] - Pbatt[i] + Prheos[i]
+    if PLAC[i] < 0:
+        PLAC[i] = 0
     if PLAC[i]<0:
         racine = VSST**2 - 4*Req[i]*(PLAC[i]*0.8)
     else:
@@ -238,4 +224,8 @@ for i in range(len(X)):
         racine = 0
     vtrain = (VSST + np.sqrt(racine))/2
     VtrainBatt.append(vtrain)
+
+trace(Times, Ebatt*3600, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps", [0, 140])
+trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps", [0, 140])
+trace(Times, Pbatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps", [0, 140])
 trace(Times, VtrainBatt, "Temps[s]", "Vtrain", "Vtrain avec batterie en fonction du temps", [0, 140])
