@@ -89,7 +89,7 @@ for i in range(len(X)):
     Vtrain.append(vtrain)
 
 Vtrain = np.array(Vtrain)
-
+#ici un test
 # Calcul de Itrain :
 Itrain = VSST - Vtrain/Req
 
