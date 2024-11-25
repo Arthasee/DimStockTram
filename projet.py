@@ -205,24 +205,29 @@ for i, pm in enumerate(Pm):
         Pbatt.append(-Pelec[i])
         trapeze = np.trapz(Pbatt[0:i], Times[0:i])
         Ebatt[i] = Ebatt0 - trapeze
-        # Ebatt[i] = max(Ebatt[i],0)
+        Ebatt[i] = max(Ebatt[i],0)
+        if Ebatt[i] == 0:
+            Pbatt[i] = 0
 
-    elif Pelec[i]>=0.5*1e6 or Vtrain[i]<500 or (Acc[i] - Acc[i-1] > 0.1):
-        Pbatt.append(Pelec[i]/3600 - Ebatt[i-1])
+    elif Pelec[i]>=0.5*1e6:  #or Vtrain[i]<500 or (Acc[i] - Acc[i-1] > 0.1)
+        Pbatt.append(-Pelec[i])
         trapeze = np.trapz(Pbatt[0:i], Times[0:i])
-        Ebatt[i] = Ebatt0 - 1/10*Ebatt[i-1]
-        # Ebatt[i] = max(Ebatt[i],0)
+        Ebatt[i] = Ebatt0 - trapeze
+        Ebatt[i] = max(Ebatt[i],0)
+        if Ebatt[i] == 0:
+            Pbatt[i] = 0
 
     else:
         Pbatt.append(Pbatt[i-1])
         trapeze = np.trapz(Pbatt[0:i], Times[0:i])
         Ebatt[i] = Ebatt0 - trapeze
-        # Ebatt[i] = max(Ebatt[i],0)
+        Ebatt[i] = max(Ebatt[i],0)
+        if Ebatt[i] == 0:
+            Pbatt[i] = 0
 
     if Ebatt[i] >= EbattMAX:
         Ebatt[i] = EbattMAX
         Prheos[i] = Pbatt[i]
-    print(Pbatt[i], trapeze)
     PLAC[i] = Pelec[i] - Pbatt[i] + Prheos[i]
     if PLAC[i] < 0:
         PLAC[i] = 0
