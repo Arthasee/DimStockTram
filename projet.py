@@ -187,43 +187,50 @@ PSST = VSST**2 / RSST
 
 #%% Batterie
 
-Pbatt = []
+Pbatt = np.zeros(len(Pm))
 Ebatt = np.zeros(len(Pm))
-Ebatt0 = 172*1e3
+Ebatt0 = 172*1e3*3/4
 EbattMAX = 172*1e3
 Ebatt[0] = Ebatt0
 Prheos = np.zeros(len(Pm))
+VtrainBatt = np.zeros(len(Pm))
 
-Pelec = []
-VtrainBatt = []
-for i, pm in enumerate(Pm):
-    if pm<0:
-        Pelec.append(Pm[i]*0.8)
+Pelec = np.zeros(len(Pm))
+for i in range(1, len(Pm)):
+    if Pm[i]<=0:
+        Pelec[i] = Pm[i]*0.8
     else:
-        Pelec.append(Pm[i]/0.8)
+        Pelec[i] = Pm[i]/0.8
 
-    if Pelec[i]<0 or V[i]==0 or Acc[i] - Acc[i-1] < 0:
-        Pbatt.append(-Pelec[i])
-    elif Pelec[i]>=0.5*1e6 or Vtrain[i]<600 or (Acc[i] - Acc[i-1] > 0.1):
-        Pbatt.append(Pbatt[i-1]+1e6)
+    seuil = 0.5 * np.max(Pelec)
+
+    if Pelec[i]<0 and Ebatt[i-1] < EbattMAX:
+        Pbatt[i] = abs(Pelec[i])
+        Ebatt[i] = Ebatt[i-1] + Pbatt[i]*1/3600
+        if Ebatt[i] > EbattMAX:
+            Ebatt[i] = EbattMAX
+            Prheos[i] = Prheos[i-1] + Pelec[i] + (Ebatt[i]-EbattMAX)*3600
+    elif Pelec[i]> seuil and Pbatt[i-1] > 0:
+        Pbatt[i] = Ebatt[i-1] * 3600
+        if Pelec[i] > Pbatt[i]:
+            Pelec[i] -= Pbatt[i]
+        else:
+            Ebatt[i] = Ebatt[i-1] - Pelec[i]*1/3600
+            Pelec[i] = 0
     else:
-        Pbatt.append(Pbatt[i-1])
-
-    trapeze = np.trapz(Pbatt[0:i], Times[0:i])
-    Ebatt[i] = Ebatt0 - trapeze
-    if Ebatt[i] >= EbattMAX:
-        Ebatt[i] = EbattMAX
-        Prheos[i] = Pbatt[i]
+        Ebatt[i] = Ebatt[i-1]
+        Pbatt[i] = Pbatt[i-1]
 
     PLAC[i] = Pelec[i] - Pbatt[i] + Prheos[i]
     if PLAC[i] < 0:
         PLAC[i] = 0
+    print(Pbatt[i], Ebatt[i], PLAC[i])
     racine = VSST**2 - 4*Req[i]*(PLAC[i]/0.8)
     racine = max(racine,0)
     vtrain = (VSST + np.sqrt(racine))/2
-    VtrainBatt.append(vtrain)
+    VtrainBatt[i] = vtrain
 
-trace(Times, Ebatt, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps", [0, 140])
-trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps", [0, 140])
-trace(Times, Pbatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps", [0, 140])
-trace(Times, VtrainBatt, "Temps[s]", "Vtrain", "Vtrain avec batterie en fonction du temps", [0, 140])
+trace(Times, Ebatt, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps")
+trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
+trace(Times, Pbatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps")
+trace(Times, VtrainBatt, "Temps[s]", "Vtrain", "Vtrain avec batterie en fonction du temps") #, [0, 140]
