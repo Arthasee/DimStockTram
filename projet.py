@@ -83,8 +83,7 @@ for i in range(len(X)):
         racine = VSST**2 - 4*Req[i]*(Pm[i]*0.8)
     else:
         racine = VSST**2 - 4*Req[i]*(Pm[i]/0.8)
-    if racine < 0:
-        racine = 0
+    racine = max(racine, 0)
     vtrain = (VSST + np.sqrt(racine))/2
     Vtrain.append(vtrain)
 
@@ -190,42 +189,49 @@ PSST = VSST**2 / RSST
 
 Pbatt = []
 Ebatt = np.zeros(len(Pm))
-Ebatt0 = 500000 /3600
-EbattMAX = 500000/3600
+Ebatt0 = 172*1e3
+EbattMAX = 172*1e3
 Ebatt[0] = Ebatt0
 Prheos = np.zeros(len(Pm))
 
 Pelec = []
 VtrainBatt = []
 for i, pm in enumerate(Pm):
-    if Pm[i]<0:
+    if pm<0:
         Pelec.append(Pm[i]*0.8)
     else:
         Pelec.append(Pm[i]/0.8)
     if Pelec[i]<0 or V[i]==0 or Acc[i] - Acc[i-1] < 0:
-        Pbatt.append(Pelec[i])
-        Ebatt[i] = Ebatt0 - methode_trapeze(Pbatt)
-    elif Vtrain[i]<500 or (Acc[i] - Acc[i-1] > 0.1):
-        Pbatt.append(Pelec[i])
+        Pbatt.append(-Pelec[i])
+        trapeze = np.trapz(Pbatt[0:i], Times[0:i])
+        Ebatt[i] = Ebatt0 - trapeze
+        # Ebatt[i] = max(Ebatt[i],0)
+
+    elif Pelec[i]>=0.5*1e6 or Vtrain[i]<500 or (Acc[i] - Acc[i-1] > 0.1):
+        Pbatt.append(Pelec[i]/3600 - Ebatt[i-1])
+        trapeze = np.trapz(Pbatt[0:i], Times[0:i])
+        Ebatt[i] = Ebatt0 - 1/10*Ebatt[i-1]
+        # Ebatt[i] = max(Ebatt[i],0)
+
     else:
         Pbatt.append(Pbatt[i-1])
-        Ebatt[i] = Ebatt0 - methode_trapeze(Pbatt)
+        trapeze = np.trapz(Pbatt[0:i], Times[0:i])
+        Ebatt[i] = Ebatt0 - trapeze
+        # Ebatt[i] = max(Ebatt[i],0)
+
     if Ebatt[i] >= EbattMAX:
         Ebatt[i] = EbattMAX
         Prheos[i] = Pbatt[i]
+    print(Pbatt[i], trapeze)
     PLAC[i] = Pelec[i] - Pbatt[i] + Prheos[i]
     if PLAC[i] < 0:
         PLAC[i] = 0
-    if PLAC[i]<0:
-        racine = VSST**2 - 4*Req[i]*(PLAC[i]*0.8)
-    else:
-        racine = VSST**2 - 4*Req[i]*(PLAC[i]/0.8)
-    if racine < 0:
-        racine = 0
+    racine = VSST**2 - 4*Req[i]*(PLAC[i]/0.8)
+    racine = max(racine,0)
     vtrain = (VSST + np.sqrt(racine))/2
     VtrainBatt.append(vtrain)
 
-trace(Times, Ebatt*3600, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps", [0, 140])
+trace(Times, Ebatt, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps", [0, 140])
 trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps", [0, 140])
 trace(Times, Pbatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps", [0, 140])
 trace(Times, VtrainBatt, "Temps[s]", "Vtrain", "Vtrain avec batterie en fonction du temps", [0, 140])
