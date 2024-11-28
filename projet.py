@@ -207,7 +207,7 @@ for i in range(1, len(Pm)):
     seuil = 0.5 * np.max(Pelec)
 
     # Loi de gestion de la batterie
-    if Pelec[i]<0 and Ebatt[i-1] < EbattMAX:
+    if (Pelec[i]<0 or V[i] == 0) and Ebatt[i-1] < EbattMAX:
         Pbatt[i] = abs(Pelec[i])
         Ebatt[i] = Ebatt[i-1] + Pbatt[i]*1/3600
         if Ebatt[i] > EbattMAX:
