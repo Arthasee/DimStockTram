@@ -245,24 +245,29 @@ trace(Times, VtrainBatt, "Temps[s]", "Vtrain", "Vtrain avec batterie en fonction
 
 # Méthode de Monte-Carlo
 
+# Construire les solutions non dominées
+
+def find_dominated_solution(objectif1, objectif2,nbre_simulations):
+    solutions_non_dominees = []
+    for i in range(nbre_simulations):
+        is_dominated = False
+        for j in range(nbre_simulations):
+            if (objectif1[j] <= objectif1[i] and objectif2[j] <= objectif2[i] and 
+                (objectif1[j] < objectif1[i] or objectif2[j] < objectif2[i])):
+                is_dominated = True
+                break
+        if not is_dominated:
+            solutions_non_dominees.append(i)
+            
+    return solutions_non_dominees
+
 # Nombre de simulations Monte-Carlo
 nbre_simulations = 1000 # fixé à priori
-
 # Stockage des résultats
-capacite_batterie = np.random.uniform(50, 200, nbre_simulations)  # Capacité de la batterie (en kWh)
-chute_tension = np.random.uniform(10, 250, nbre_simulations)  # Chute de tension maximale (en V)
-
-# Construire les solutions non dominées
-solutions_non_dominees = []
-for i in range(nbre_simulations):
-    is_dominated = False
-    for j in range(nbre_simulations):
-        if (capacite_batterie[j] <= capacite_batterie[i] and chute_tension[j] <= chute_tension[i] and 
-            (capacite_batterie[j] < capacite_batterie[i] or chute_tension[j] < chute_tension[i])):
-            is_dominated = True
-            break
-    if not is_dominated:
-        solutions_non_dominees.append(i)
+capacite_batterie = np.random.uniform(50, 200, nbre_simulations)  # Capacité de la batterie (en kWh) objectif1
+chute_tension = np.random.uniform(10, 250, nbre_simulations)  # Chute de tension maximale (en V) objectif2
+# Appel de la fonction
+solutions_non_dominees=find_dominated_solution(capacite_batterie ,chute_tension,nbre_simulations)
 
 # Affichage des solutions 
 plt.scatter(capacite_batterie, chute_tension, color = 'skyblue', label='Ensemble des solutions par la méthode de Monté - Carlo')
@@ -286,5 +291,9 @@ plt.show()
 - Opération génétique classique vu en IA TP4: Mutations et Croisement pour éxplorer d'autres espaces de recherches
 4) Àrret à la fin du cycle de génération
 """
+
+""" Notes de la thèse: 
+Explorer les zones qui paraissent prometteuses sans être bloquées
+par un optimum local."""
 
 
