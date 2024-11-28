@@ -185,8 +185,9 @@ PSST = VSST**2 / RSST
 # trace(Times, Acc, "Temps [s]", "Accélération [$m/s^2$]", "Accélération en fonction du temps", [0, 140], [-2,2], save=True, nom = "Acc.pdf")
 # trace(Times, PLAC, "Temps [s]", "PLAC", "PLAC en fonction du temps", save=True, nom = "PLAC.pdf")
 
-#%% Batterie
+#%% Ajout de la batterie (en sst inversible)
 
+# Initialisation
 Pbatt = np.zeros(len(Pm))
 Ebatt = np.zeros(len(Pm))
 Ebatt0 = 172*1e3*3/4
@@ -194,8 +195,9 @@ EbattMAX = 172*1e3
 Ebatt[0] = Ebatt0
 Prheos = np.zeros(len(Pm))
 VtrainBatt = np.zeros(len(Pm))
-
 Pelec = np.zeros(len(Pm))
+
+# Remplissage de Pelec, rendement de perte 0.8 
 for i in range(1, len(Pm)):
     if Pm[i]<=0:
         Pelec[i] = Pm[i]*0.8
@@ -204,6 +206,7 @@ for i in range(1, len(Pm)):
 
     seuil = 0.5 * np.max(Pelec)
 
+    # Loi de gestion de la batterie
     if Pelec[i]<0 and Ebatt[i-1] < EbattMAX:
         Pbatt[i] = abs(Pelec[i])
         Ebatt[i] = Ebatt[i-1] + Pbatt[i]*1/3600
@@ -230,17 +233,20 @@ for i in range(1, len(Pm)):
     vtrain = (VSST + np.sqrt(racine))/2
     VtrainBatt[i] = vtrain
 
+# Affichage des solutions 
 trace(Times, Ebatt, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps")
 trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
 trace(Times, Pbatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps")
 trace(Times, VtrainBatt, "Temps[s]", "Vtrain", "Vtrain avec batterie en fonction du temps") #, [0, 140]
 
 
-#Dimmensionnement du système de stockage
+#%% Dimmensionnement du système de stockage
 #construction de l’ensemble des solutions non dominées pour les critères « Capacité en énergie de la batterie » et « Chute de tension maximale » (qui est la différence entre la tension nominale (750V) et la tension réelle mesurée aux bornes du train.)
 
+# Méthode de Monte-Carlo
+
 # Nombre de simulations Monte-Carlo
-nbre_simulations = 1000  
+nbre_simulations = 1000 # fixé à priori
 
 # Stockage des résultats
 capacite_batterie = np.random.uniform(50, 200, nbre_simulations)  # Capacité de la batterie (en kWh)
@@ -265,3 +271,4 @@ plt.xlabel('Capacité en énergie de la batterie (kWh)')
 plt.ylabel('Chute de tension maximale (V)')
 plt.legend()
 plt.show()
+# %%
