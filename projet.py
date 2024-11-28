@@ -224,7 +224,7 @@ for i in range(1, len(Pm)):
     PLAC[i] = Pelec[i] - Pbatt[i] + Prheos[i]
     if PLAC[i] < 0:
         PLAC[i] = 0
-    print(Pbatt[i], Ebatt[i], PLAC[i])
+    print("Pbatt =", Pbatt[i], "Ebatt =", Ebatt[i], "PLAC =", PLAC[i])
     racine = VSST**2 - 4*Req[i]*(PLAC[i]/0.8)
     racine = max(racine,0)
     vtrain = (VSST + np.sqrt(racine))/2
@@ -234,3 +234,34 @@ trace(Times, Ebatt, "Temps[s]", "Energie de la batterie", "Energie de la batteri
 trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
 trace(Times, Pbatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps")
 trace(Times, VtrainBatt, "Temps[s]", "Vtrain", "Vtrain avec batterie en fonction du temps") #, [0, 140]
+
+
+#Dimmensionnement du système de stockage
+#construction de l’ensemble des solutions non dominées pour les critères « Capacité en énergie de la batterie » et « Chute de tension maximale » (qui est la différence entre la tension nominale (750V) et la tension réelle mesurée aux bornes du train.)
+
+# Nombre de simulations Monte-Carlo
+nbre_simulations = 1000  
+
+# Stockage des résultats
+capacite_batterie = np.random.uniform(50, 200, nbre_simulations)  # Capacité de la batterie (en kWh)
+chute_tension = np.random.uniform(10, 250, nbre_simulations)  # Chute de tension maximale (en V)
+
+# Construire les solutions non dominées
+solutions_non_dominees = []
+for i in range(nbre_simulations):
+    is_dominated = False
+    for j in range(nbre_simulations):
+        if (capacite_batterie[j] <= capacite_batterie[i] and chute_tension[j] <= chute_tension[i] and 
+            (capacite_batterie[j] < capacite_batterie[i] or chute_tension[j] < chute_tension[i])):
+            is_dominated = True
+            break
+    if not is_dominated:
+        solutions_non_dominees.append(i)
+
+# Affichage des solutions 
+plt.scatter(capacite_batterie, chute_tension, color = 'skyblue', label='Ensemble des solutions par la méthode de Monté - Carlo')
+plt.scatter(capacite_batterie[solutions_non_dominees], chute_tension[solutions_non_dominees], color='red', label='Solutions non dominées')
+plt.xlabel('Capacité en énergie de la batterie (kWh)')
+plt.ylabel('Chute de tension maximale (V)')
+plt.legend()
+plt.show()
