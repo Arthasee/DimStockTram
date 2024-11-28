@@ -271,4 +271,20 @@ plt.xlabel('Capacité en énergie de la batterie (kWh)')
 plt.ylabel('Chute de tension maximale (V)')
 plt.legend()
 plt.show()
-# %%
+
+
+# Méthode NGSA2 ( non-sorted algorithm system)
+
+""" Notes: Objectif: trouver un enssemble de solutions non-dominées appelées Paréto optimales. Identification de front de paréto 
+-> ensemble de solutions où aucune solution ne peut être améliorée dans un objectif sans détériorer un autre objectif.
+1) Population N choisis aléatoirement
+2) Individu --> gène , enssemble des gène de l'inidividu --> chromosome
+3) À chaque génération (nombre de génération choisi préalablement) : 
+- Tri des individus, premier front contient les solutions non dominées( Paréto optimales), le second front contient les solutions dominées uniquement par celles du premier front, et ainsi de suite.
+50 pourcent des meilleurs individus seront choisis (dans chaque front de paréto j'imagine)
+- Mesure de diversité, distance de regroupement
+- Opération génétique classique vu en IA TP4: Mutations et Croisement pour éxplorer d'autres espaces de recherches
+4) Àrret à la fin du cycle de génération
+"""
+
+
