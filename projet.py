@@ -3,6 +3,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from help_function import *
+import copy
+import random
 
 #%% Création et conversion des données
 
@@ -227,17 +229,17 @@ for i in range(1, len(Pm)):
     PLAC[i] = Pelec[i] - Pbatt[i] + Prheos[i]
     if PLAC[i] < 0:
         PLAC[i] = 0
-    print("Pbatt =", Pbatt[i], "Ebatt =", Ebatt[i], "PLAC =", PLAC[i])
+    # print("Pbatt =", Pbatt[i], "Ebatt =", Ebatt[i], "PLAC =", PLAC[i])
     racine = VSST**2 - 4*Req[i]*(PLAC[i]/0.8)
     racine = max(racine,0)
     vtrain = (VSST + np.sqrt(racine))/2
     VtrainBatt[i] = vtrain
 
 # Affichage des solutions 
-trace(Times, Ebatt, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps")
-trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
-trace(Times, Pbatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps")
-trace(Times, VtrainBatt, "Temps[s]", "Vtrain", "Vtrain avec batterie en fonction du temps") #, [0, 140]
+# trace(Times, Ebatt, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps")
+# trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
+# trace(Times, Pbatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps")
+# trace(Times, VtrainBatt, "Temps[s]", "Vtrain", "Vtrain avec batterie en fonction du temps") #, [0, 140]
 
 
 #%% Dimmensionnement du système de stockage
@@ -247,7 +249,7 @@ trace(Times, VtrainBatt, "Temps[s]", "Vtrain", "Vtrain avec batterie en fonction
 
 # Construire les solutions non dominées
 
-def find_dominated_solution(objectif1, objectif2,nbre_simulations):
+def find_non_dominated_solution(objectif1, objectif2,nbre_simulations):
     solutions_non_dominees = []
     for i in range(nbre_simulations):
         is_dominated = False
@@ -267,15 +269,15 @@ nbre_simulations = 1000 # fixé à priori
 capacite_batterie = np.random.uniform(50, 200, nbre_simulations)  # Capacité de la batterie (en kWh) objectif1
 chute_tension = np.random.uniform(10, 250, nbre_simulations)  # Chute de tension maximale (en V) objectif2
 # Appel de la fonction
-solutions_non_dominees=find_dominated_solution(capacite_batterie ,chute_tension,nbre_simulations)
+solutions_non_dominees=find_non_dominated_solution(capacite_batterie ,chute_tension,nbre_simulations)
 
 # Affichage des solutions 
-plt.scatter(capacite_batterie, chute_tension, color = 'skyblue', label='Ensemble des solutions par la méthode de Monté - Carlo')
-plt.scatter(capacite_batterie[solutions_non_dominees], chute_tension[solutions_non_dominees], color='red', label='Solutions non dominées')
-plt.xlabel('Capacité en énergie de la batterie (kWh)')
-plt.ylabel('Chute de tension maximale (V)')
-plt.legend()
-plt.show()
+# plt.scatter(capacite_batterie, chute_tension, color = 'skyblue', label='Ensemble des solutions par la méthode de Monté - Carlo')
+# plt.scatter(capacite_batterie[solutions_non_dominees], chute_tension[solutions_non_dominees], color='red', label='Solutions non dominées')
+# plt.xlabel('Capacité en énergie de la batterie (kWh)')
+# plt.ylabel('Chute de tension maximale (V)')
+# plt.legend()
+# plt.show()
 
 
 # Méthode NGSA2 ( non-sorted algorithm system)
@@ -290,10 +292,111 @@ plt.show()
 - Mesure de diversité, distance de regroupement
 - Opération génétique classique vu en IA TP4: Mutations et Croisement pour éxplorer d'autres espaces de recherches
 4) Àrret à la fin du cycle de génération
+
+
+3 caractéristiques suivantes: 
+-Principe de l'éllitsime
+-Favorise les solutions non dominées
+- Donc, dévloppe une grande variété de solution
+
+
+
+
+
 """
 
 """ Notes de la thèse: 
 Explorer les zones qui paraissent prometteuses sans être bloquées
 par un optimum local."""
 
+
+def NGSA2(capacite_batterie,chute_tension,nb_generation,pop_size):
+    # Initialisation
+    population = np.column_stack((capacite_batterie, chute_tension))# poppulation individu "parent" initial généré aléatoirement taille N
+    Q=[] # enssemble des "enfants" pour chaque generation
+    P=[] # enssemble des "parents" pour chaque generation
+    R=[] # enssemble créé avec parents + enfants donc de taille 2*N
+
+    
+    
+    
+    
+    front_pareto=[] 
+    
+    
+    for i in range(nb_generation):
+        # front de pareto
+        o1=[]
+        o2=[]
+        for i in population:
+            o1.append(i[0])
+            o2.append(i[1])
+        front=find_non_dominated_solution(o1,o2,pop_size)
+        front_pareto.append(front)
+        # distance d'encombrement/regroupement
+        d_encombrement= distance_encombrement(front)
+        # 
+
+# Appel fonction
+pop_size=1000
+capacite_batterie = np.random.uniform(50, 200, pop_size)  # Capacité de la batterie (en kWh) objectif1
+chute_tension = np.random.uniform(10, 250, pop_size)  # Chute de tension maximale (en V) objectif2  
+    
+    
+# NGSA2(capacite_batterie,chute_tension)
+
+
+
+# Fonctions qu'ont a besoin pour réaliser l'algorithme génétique
+
+def get_code():
+    return 1
+
+def create_mutant(key, K,taille_genome): # K position de la mutation
+  key_mutation=copy.deepcopy(key)
+  for i in range(K):
+    position=random.randint(0,taille_genome)
+    print(position)
+    if key[position]==1:
+      key_mutation[position]=0
+    elif key[position]==0:
+      key_mutation[position]=1
+  
+  # print(f"Key mutée:{key_mutation} et key original{key}")
+  
+  return key_mutation
+
+
+def croisement(parent1,parent2,rate):
+    
+    return 1
+
+
+def distance_encombrement(objectif1,objectif2):
+    return 1
+
+def selection(fronts_pareto,distances,pop_size):
+    # il faut selectionner 50% des meilleurs d'après le slide du projet
+    selected=[]
+    N=int(pop_size*0.5)  # nomrbe_a_selectionne
+    for i in range(0,len(fronts_pareto)):
+        if len(selected) + len(fronts_pareto[i]) < N:
+            selected.extend(fronts_pareto[i])
+        else:
+            reste= N-len(selected) 
+            front= fronts_pareto[i]
+            if reste>0:
+                selected.extend(front[:reste])
+            break
+         
+    return selected
+
+#test:  état selection FONCTIONNE
+# selectionne_test=selection([[1,2,3,4],[5,4,9,10]],0,10)
+# print(selectionne_test)
+
+
+
+def dominate():
+    return 1
 
