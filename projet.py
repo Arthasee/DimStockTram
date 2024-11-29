@@ -300,6 +300,10 @@ solutions_non_dominees=find_non_dominated_solution(capacite_batterie ,chute_tens
 - Donc, dévloppe une grande variété de solution
 
 
+Ref:
+https://www.mechanics-industry.org/articles/meca/pdf/2010/03/mi100066.pdf
+https://moodle-sciences-24.sorbonne-universite.fr/pluginfile.php/227541/mod_resource/content/1/142199_BOUKIR%20_2023_archivage.pdf THESE
+https://moodle-sciences-24.sorbonne-universite.fr/pluginfile.php/225975/mod_resource/content/1/OPTIM_2425_Presentation_projet.pdf SLIDE
 
 
 
@@ -321,7 +325,7 @@ def NGSA2(capacite_batterie,chute_tension,nb_generation,pop_size):
     
     
     
-    front_pareto=[] 
+    fronts_pareto=[] 
     
     
     for i in range(nb_generation):
@@ -331,11 +335,10 @@ def NGSA2(capacite_batterie,chute_tension,nb_generation,pop_size):
         for i in population:
             o1.append(i[0])
             o2.append(i[1])
-        front=find_non_dominated_solution(o1,o2,pop_size)
-        front_pareto.append(front)
-        # distance d'encombrement/regroupement
-        d_encombrement= distance_encombrement(front)
-        # 
+        front=find_non_dominated_solution(o1,o2,pop_size) # c'est notre fonction d'évaluation!!!!!
+        fronts_pareto.append(front)
+        # selection (50% + distance d'emcombrement) distance d'encombrement à rajouter
+        
 
 # Appel fonction
 pop_size=1000
@@ -350,26 +353,35 @@ chute_tension = np.random.uniform(10, 250, pop_size)  # Chute de tension maximal
 # Fonctions qu'ont a besoin pour réaliser l'algorithme génétique
 
 def get_code():
+    # on a deux variables de décision ? 
     return 1
 
-def create_mutant(key, K,taille_genome): # K position de la mutation
-  key_mutation=copy.deepcopy(key)
-  for i in range(K):
-    position=random.randint(0,taille_genome)
-    print(position)
-    if key[position]==1:
-      key_mutation[position]=0
-    elif key[position]==0:
-      key_mutation[position]=1
+def create_mutant(key, K=1,rate=0.5): # K nombrede  mutation
+    taille_genome=len(key)
+    key_mutation=copy.deepcopy(key)
+    for i in range(K):
+        if random.random()<rate: # a mettre la , ou leurs de l'appel de la fonction à voir plus tard
+            position=random.randint(0,taille_genome)
+            print(position)
+            if key[position]==1:
+                key_mutation[position]=0
+            elif key[position]==0:
+                key_mutation[position]=1
   
   # print(f"Key mutée:{key_mutation} et key original{key}")
   
-  return key_mutation
+    return key_mutation
 
 
-def croisement(parent1,parent2,rate):
-    
-    return 1
+def croisement(parent1, parent2, rate=0.5): # le rate 0.5 signifie une chance égale , 50% des cas --> croisement réalisé
+    taille_genome = len(parent1)
+    enfant=[]
+    for i in range(taille_genome):
+        if random.random() < rate: # génére un nb entre 0 et 1 # a mettre la , ou leurs de l'appel de la fonction à voir plus tard
+            point_de_croisement= random.randint(0,taille_genome)
+            enfant= parent1[:point_de_croisement] + parent2[point_de_croisement:]
+            
+    return enfant
 
 
 def distance_encombrement(objectif1,objectif2):
@@ -396,7 +408,15 @@ def selection(fronts_pareto,distances,pop_size):
 # print(selectionne_test)
 
 
-
 def dominate():
     return 1
 
+
+
+def voir_convergence():
+    
+    return 1
+
+
+""" Parametre à changer pour obtenir une meilleur convergence des front de paréto:
+rate mutation, nb de mutation sur un genome, rate croisement, pop_size,  a rajoutez si vous pensez à quelque chose"""
