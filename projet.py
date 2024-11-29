@@ -356,21 +356,14 @@ def get_code():
     # on a deux variables de décision ? 
     return 1
 
-def create_mutant(key, K=1,rate=0.5): # K nombrede  mutation
-    taille_genome=len(key)
-    key_mutation=copy.deepcopy(key)
-    for i in range(K):
-        if random.random()<rate: # a mettre la , ou leurs de l'appel de la fonction à voir plus tard
-            position=random.randint(0,taille_genome)
-            print(position)
-            if key[position]==1:
-                key_mutation[position]=0
-            elif key[position]==0:
-                key_mutation[position]=1
+def mutation(individual,variable_limite, mutation_rate=0.5): 
+    for i in range(len(individual)):
+        if random.random() < mutation_rate:
+            individual[i] = random.uniform(variable_limite[0],variable_limite[1])  # changement s'opère entre les limites, mutations aleatoire 
+    return individual
   
-  # print(f"Key mutée:{key_mutation} et key original{key}")
   
-    return key_mutation
+
 
 
 def croisement(parent1, parent2, rate=0.5): # le rate 0.5 signifie une chance égale , 50% des cas --> croisement réalisé
@@ -378,14 +371,13 @@ def croisement(parent1, parent2, rate=0.5): # le rate 0.5 signifie une chance é
     enfant=[]
     for i in range(taille_genome):
         if random.random() < rate: # génére un nb entre 0 et 1 # a mettre la , ou leurs de l'appel de la fonction à voir plus tard
-            point_de_croisement= random.randint(0,taille_genome)
+            point_de_croisement= random.randint(0,taille_genome-1)
             enfant= parent1[:point_de_croisement] + parent2[point_de_croisement:]
             
     return enfant
 
 
-def distance_encombrement(objectif1,objectif2):
-    return 1
+
 
 def selection(fronts_pareto,distances,pop_size):
     # il faut selectionner 50% des meilleurs d'après le slide du projet
@@ -408,8 +400,12 @@ def selection(fronts_pareto,distances,pop_size):
 # print(selectionne_test)
 
 
-def dominate():
+
+def distance_encombrement(population):
+    
     return 1
+
+
 
 
 
