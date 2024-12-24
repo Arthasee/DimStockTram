@@ -286,7 +286,7 @@ solutions_non_dominees=find_non_dominated_solution(capacite_batterie ,chute_tens
 # plt.show()
 
 
-#%% Méthode de Monte-Carlo 2 
+#%% Méthode de Monte-Carlo 2 car ne fasait pas le bon travail
 
 # Nombre de simulations Monte-Carlo
 nbre_simulations = 1000 # fixé à priori
