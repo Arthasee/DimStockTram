@@ -189,6 +189,46 @@ PSST = VSST**2 / RSST
 
 #%% Ajout de la batterie (en sst inversible)
 
+
+
+def modele_batterie(Pbatt,Ebatt,Ebatt0,Prheos,VtrainBatt,Pelec):
+    # Remplissage de Pelec, rendement de perte 0.8 
+    for i in range(1, len(Pm)):
+        if Pm[i]<=0:
+            Pelec[i] = Pm[i]*0.8
+        else:
+            Pelec[i] = Pm[i]/0.8
+
+        seuil = 0.5 * np.max(Pelec)
+
+        # Loi de gestion de la batterie
+        if (Pelec[i]<0 or V[i] == 0) and Ebatt[i-1] < EbattMAX:
+            Pbatt[i] = abs(Pelec[i])
+            Ebatt[i] = Ebatt[i-1] + Pbatt[i]*1/3600
+            if Ebatt[i] > EbattMAX:
+                Ebatt[i] = EbattMAX
+                Prheos[i] = Prheos[i-1] + Pelec[i] + (Ebatt[i]-EbattMAX)*3600
+        elif Pelec[i]> seuil and Pbatt[i-1] > 0:
+            Pbatt[i] = Ebatt[i-1] * 3600
+            if Pelec[i] > Pbatt[i]:
+                Pelec[i] -= Pbatt[i]
+            else:
+                Ebatt[i] = Ebatt[i-1] - Pelec[i]*1/3600
+                Pelec[i] = 0
+        else:
+            Ebatt[i] = Ebatt[i-1]
+            Pbatt[i] = Pbatt[i-1]
+
+        PLAC[i] = Pelec[i] - Pbatt[i] + Prheos[i]
+        if PLAC[i] < 0:
+            PLAC[i] = 0
+        # print("Pbatt =", Pbatt[i], "Ebatt =", Ebatt[i], "PLAC =", PLAC[i])
+        racine = VSST**2 - 4*Req[i]*(PLAC[i]/0.8)
+        racine = max(racine,0)
+        vtrain = (VSST + np.sqrt(racine))/2
+        VtrainBatt[i] = vtrain
+
+
 # Initialisation
 Pbatt = np.zeros(len(Pm))
 Ebatt = np.zeros(len(Pm))
@@ -199,53 +239,19 @@ Prheos = np.zeros(len(Pm))
 VtrainBatt = np.zeros(len(Pm))
 Pelec = np.zeros(len(Pm))
 
-# Remplissage de Pelec, rendement de perte 0.8 
-for i in range(1, len(Pm)):
-    if Pm[i]<=0:
-        Pelec[i] = Pm[i]*0.8
-    else:
-        Pelec[i] = Pm[i]/0.8
-
-    seuil = 0.5 * np.max(Pelec)
-
-    # Loi de gestion de la batterie
-    if (Pelec[i]<0 or V[i] == 0) and Ebatt[i-1] < EbattMAX:
-        Pbatt[i] = abs(Pelec[i])
-        Ebatt[i] = Ebatt[i-1] + Pbatt[i]*1/3600
-        if Ebatt[i] > EbattMAX:
-            Ebatt[i] = EbattMAX
-            Prheos[i] = Prheos[i-1] + Pelec[i] + (Ebatt[i]-EbattMAX)*3600
-    elif Pelec[i]> seuil and Pbatt[i-1] > 0:
-        Pbatt[i] = Ebatt[i-1] * 3600
-        if Pelec[i] > Pbatt[i]:
-            Pelec[i] -= Pbatt[i]
-        else:
-            Ebatt[i] = Ebatt[i-1] - Pelec[i]*1/3600
-            Pelec[i] = 0
-    else:
-        Ebatt[i] = Ebatt[i-1]
-        Pbatt[i] = Pbatt[i-1]
-
-    PLAC[i] = Pelec[i] - Pbatt[i] + Prheos[i]
-    if PLAC[i] < 0:
-        PLAC[i] = 0
-    # print("Pbatt =", Pbatt[i], "Ebatt =", Ebatt[i], "PLAC =", PLAC[i])
-    racine = VSST**2 - 4*Req[i]*(PLAC[i]/0.8)
-    racine = max(racine,0)
-    vtrain = (VSST + np.sqrt(racine))/2
-    VtrainBatt[i] = vtrain
+modele_batterie(Pbatt,Ebatt,Ebatt0,Prheos,VtrainBatt,Pelec)
 
 # Affichage des solutions 
-# trace(Times, Ebatt, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps")
-# trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
-# trace(Times, Pbatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps")
-# trace(Times, VtrainBatt, "Temps[s]", "Vtrain", "Vtrain avec batterie en fonction du temps") #, [0, 140]
+trace(Times, Ebatt, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps")
+trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
+trace(Times, Pbatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps")
+trace(Times, VtrainBatt, "Temps[s]", "Vtrain", "Vtrain avec batterie en fonction du temps") #, [0, 140]
 
 
 #%% Dimmensionnement du système de stockage
 #construction de l’ensemble des solutions non dominées pour les critères « Capacité en énergie de la batterie » et « Chute de tension maximale » (qui est la différence entre la tension nominale (750V) et la tension réelle mesurée aux bornes du train.)
 
-# Méthode de Monte-Carlo
+#%% Méthode de Monte-Carlo
 
 # Construire les solutions non dominées
 
@@ -280,7 +286,38 @@ solutions_non_dominees=find_non_dominated_solution(capacite_batterie ,chute_tens
 # plt.show()
 
 
-# Méthode NGSA2 ( non-sorted algorithm system)
+#%% Méthode de Monte-Carlo 2 
+
+# Nombre de simulations Monte-Carlo
+nbre_simulations = 1000 # fixé à priori
+
+# Paramètres à optimiser sont le cout et la chute de tension dv max --> le cout est proportionel à la capacité, plus la Pseuil est petit plus la batterie rentre en compte lorsquil ne faut pas et plus Pseuil est grand plus il y a une chute de tension --> parametre a optimiser capacité et chute de tension
+capacite_batterie = np.random.uniform(0, 200, nbre_simulations)  # Capacité de la batterie (en kWh) objectif1
+seuil = np.random.uniform(0, 1, nbre_simulations)  # Chute de tension maximale (en MW) objectif2
+
+# Affichage des solutions 
+plt.subplot(211)
+plt.scatter(capacite_batterie, seuil, color = 'skyblue')
+plt.xlabel('Capacité en énergie de la batterie (kWh)')
+plt.ylabel('P seuil (MW)')
+plt.title('Espace des solutions / de recherche')
+plt.grid()
+plt.legend()
+
+plt.subplot(212)
+plt.scatter(capacite_batterie, seuil, color = 'skyblue')
+plt.xlabel('Capacité en énergie de la batterie (kWh)')
+plt.ylabel('dV max (V)')
+plt.title('Espace des objectifs')
+plt.grid()
+plt.legend()
+
+
+plt.tight_layout()
+plt.show()
+
+print(VtrainBatt)
+#%% Méthode NGSA2 ( non-sorted algorithm system)
 
 """ Notes: Objectif: trouver un enssemble de solutions non-dominées appelées Paréto optimales. Identification de front de paréto 
 -> ensemble de solutions où aucune solution ne peut être améliorée dans un objectif sans détériorer un autre objectif.
@@ -291,7 +328,7 @@ solutions_non_dominees=find_non_dominated_solution(capacite_batterie ,chute_tens
 50 pourcent des meilleurs individus seront choisis (dans chaque front de paréto j'imagine)
 - Mesure de diversité, distance de regroupement
 - Opération génétique classique vu en IA TP4: Mutations et Croisement pour éxplorer d'autres espaces de recherches
-4) Àrret à la fin du cycle de génération
+4) Arret à la fin du cycle de génération
 
 
 3 caractéristiques suivantes: 
@@ -362,9 +399,6 @@ def mutation(individual,variable_limite, mutation_rate=0.5):
             individual[i] = random.uniform(variable_limite[0],variable_limite[1])  # changement s'opère entre les limites, mutations aleatoire 
     return individual
   
-  
-
-
 
 def croisement(parent1, parent2, rate=0.5): # le rate 0.5 signifie une chance égale , 50% des cas --> croisement réalisé
     taille_genome = len(parent1)
@@ -372,8 +406,8 @@ def croisement(parent1, parent2, rate=0.5): # le rate 0.5 signifie une chance é
     for i in range(taille_genome):
         if random.random() < rate: # génére un nb entre 0 et 1 # a mettre la , ou leurs de l'appel de la fonction à voir plus tard
             point_de_croisement= random.randint(0,taille_genome-1)
-            enfant= parent1[:point_de_croisement] + parent2[point_de_croisement:]
-            
+            enfant= parent1[:point_de_croisement] + parent2[point_de_croisement:]         
+    
     return enfant
 
 
