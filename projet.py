@@ -191,7 +191,10 @@ PSST = VSST**2 / RSST
 
 
 
-def modele_batterie(Pbatt,Ebatt,Ebatt0,Prheos,VtrainBatt,Pelec):
+def modele_batterie(Pbatt,EbattMAX,Prheos,VtrainBatt,Pelec):
+    
+    Ebatt0 = EbattMAX*3/4
+    Ebatt[0] = Ebatt0
     # Remplissage de Pelec, rendement de perte 0.8 
     for i in range(1, len(Pm)):
         if Pm[i]<=0:
@@ -232,19 +235,17 @@ def modele_batterie(Pbatt,Ebatt,Ebatt0,Prheos,VtrainBatt,Pelec):
 # Initialisation
 Pbatt = np.zeros(len(Pm))
 Ebatt = np.zeros(len(Pm))
-Ebatt0 = 172*1e3*3/4
 EbattMAX = 172*1e3
-Ebatt[0] = Ebatt0
 Prheos = np.zeros(len(Pm))
 VtrainBatt = np.zeros(len(Pm))
 Pelec = np.zeros(len(Pm))
 
-modele_batterie(Pbatt,Ebatt,Ebatt0,Prheos,VtrainBatt,Pelec)
+modele_batterie(Pbatt,EbattMAX,Prheos,VtrainBatt,Pelec)
 
 # Affichage des solutions 
 trace(Times, Ebatt, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps")
-trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
-trace(Times, Pbatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps")
+# trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
+# trace(Times, Pbatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps")
 trace(Times, VtrainBatt, "Temps[s]", "Vtrain", "Vtrain avec batterie en fonction du temps") #, [0, 140]
 
 
@@ -286,14 +287,25 @@ solutions_non_dominees=find_non_dominated_solution(capacite_batterie ,chute_tens
 # plt.show()
 
 
-#%% Méthode de Monte-Carlo 2 car ne fasait pas le bon travail
-
+#%% Méthode de Monte-Carlo 2 
+print(len(Vtrain))
 # Nombre de simulations Monte-Carlo
 nbre_simulations = 1000 # fixé à priori
 
 # Paramètres à optimiser sont le cout et la chute de tension dv max --> le cout est proportionel à la capacité, plus la Pseuil est petit plus la batterie rentre en compte lorsquil ne faut pas et plus Pseuil est grand plus il y a une chute de tension --> parametre a optimiser capacité et chute de tension
 capacite_batterie = np.random.uniform(0, 200, nbre_simulations)  # Capacité de la batterie (en kWh) objectif1
 seuil = np.random.uniform(0, 1, nbre_simulations)  # Chute de tension maximale (en MW) objectif2
+dV_max =np.array([])
+
+for i in range(0,nbre_simulations):
+    EbattMAX=capacite_batterie[i]
+    modele_batterie(Pbatt,EbattMAX,Prheos,VtrainBatt,Pelec)
+    temp1=VSST-VtrainBatt[0]
+    for j in range(1,len(VtrainBatt)):
+        if VSST-VtrainBatt[j]>VSST-VtrainBatt[j-1]:
+            temp1=VSST-VtrainBatt[j]
+    dV_max=np.append(dV_max,temp1)
+    # print(dV_max)
 
 # Affichage des solutions 
 plt.subplot(211)
@@ -304,8 +316,9 @@ plt.title('Espace des solutions / de recherche')
 plt.grid()
 plt.legend()
 
+
 plt.subplot(212)
-plt.scatter(capacite_batterie, seuil, color = 'skyblue')
+plt.scatter(capacite_batterie, dV_max, color = 'skyblue')
 plt.xlabel('Capacité en énergie de la batterie (kWh)')
 plt.ylabel('dV max (V)')
 plt.title('Espace des objectifs')
@@ -316,7 +329,7 @@ plt.legend()
 plt.tight_layout()
 plt.show()
 
-print(VtrainBatt)
+
 #%% Méthode NGSA2 ( non-sorted algorithm system)
 
 """ Notes: Objectif: trouver un enssemble de solutions non-dominées appelées Paréto optimales. Identification de front de paréto 
