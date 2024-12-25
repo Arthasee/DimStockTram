@@ -191,7 +191,7 @@ PSST = VSST**2 / RSST
 
 
 
-def modele_batterie(Pbatt,EbattMAX,Prheos,VtrainBatt,Pelec):
+def modele_batterie(Pbatt,EbattMAX,Prheos,VtrainBatt,Pelec,seuil_test,Pseuil):
     
     Ebatt0 = EbattMAX*3/4
     Ebatt[0] = Ebatt0
@@ -201,8 +201,12 @@ def modele_batterie(Pbatt,EbattMAX,Prheos,VtrainBatt,Pelec):
             Pelec[i] = Pm[i]*0.8
         else:
             Pelec[i] = Pm[i]/0.8
-
-        seuil = 0.5 * np.max(Pelec)
+            
+        if seuil_test=='moitie':
+            seuil = 0.5 * np.max(Pelec)
+            print(np.max(Pelec))
+        else:
+            seuil=Pseuil*10E6
 
         # Loi de gestion de la batterie
         if (Pelec[i]<0 or V[i] == 0) and Ebatt[i-1] < EbattMAX:
@@ -239,13 +243,14 @@ EbattMAX = 172*1e3
 Prheos = np.zeros(len(Pm))
 VtrainBatt = np.zeros(len(Pm))
 Pelec = np.zeros(len(Pm))
-
-modele_batterie(Pbatt,EbattMAX,Prheos,VtrainBatt,Pelec)
+seuil_test='moitie' #test
+Pseuil=0 # test
+modele_batterie(Pbatt,EbattMAX,Prheos,VtrainBatt,Pelec,seuil_test,Pseuil)
 
 # Affichage des solutions 
 trace(Times, Ebatt, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps")
-# trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
-# trace(Times, Pbatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps")
+trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
+trace(Times, Pbatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps")
 trace(Times, VtrainBatt, "Temps[s]", "Vtrain", "Vtrain avec batterie en fonction du temps") #, [0, 140]
 
 
@@ -298,13 +303,22 @@ seuil = np.random.uniform(0, 1, nbre_simulations)  # Chute de tension maximale (
 dV_max =np.array([])
 
 for i in range(0,nbre_simulations):
-    EbattMAX=capacite_batterie[i]
-    modele_batterie(Pbatt,EbattMAX,Prheos,VtrainBatt,Pelec)
+    Pbatt = np.zeros(len(Pm))
+    Ebatt = np.zeros(len(Pm))
+    EbattMAX = 172*1e3
+    Prheos = np.zeros(len(Pm))
+    VtrainBatt = np.zeros(len(Pm))
+    Pelec = np.zeros(len(Pm))
+    seuil_test='moitie' #test
+    Pseuil=0 # test
+    modele_batterie(Pbatt,capacite_batterie[i],Prheos,VtrainBatt,Pelec,'none',seuil[i])
     temp1=VSST-VtrainBatt[0]
     for j in range(1,len(VtrainBatt)):
-        if VSST-VtrainBatt[j]>VSST-VtrainBatt[j-1]:
-            temp1=VSST-VtrainBatt[j]
-    dV_max=np.append(dV_max,temp1)
+        if VtrainBatt[j]<VtrainBatt[j-1]:
+            temp1=VtrainBatt[j]
+            # print(VtrainBatt[j])
+            
+    dV_max=np.append(dV_max,VSST-temp1)
     # print(dV_max)
 
 # Affichage des solutions 
