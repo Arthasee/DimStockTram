@@ -204,9 +204,9 @@ def modele_batterie(Pbatt,EbattMAX,Prheos,VtrainBatt,Pelec,seuil_test,Pseuil):
             
         if seuil_test=='moitie':
             seuil = 0.5 * np.max(Pelec)
-            print(np.max(Pelec))
+            # print(np.max(Pelec)) QUEL UNIT2???
         else:
-            seuil=Pseuil*10E6
+            seuil=Pseuil
 
         # Loi de gestion de la batterie
         if (Pelec[i]<0 or V[i] == 0) and Ebatt[i-1] < EbattMAX:
@@ -299,8 +299,8 @@ nbre_simulations = 1000 # fixé à priori
 
 # Paramètres à optimiser sont le cout et la chute de tension dv max --> le cout est proportionel à la capacité, plus la Pseuil est petit plus la batterie rentre en compte lorsquil ne faut pas et plus Pseuil est grand plus il y a une chute de tension --> parametre a optimiser capacité et chute de tension
 capacite_batterie = np.random.uniform(0, 200, nbre_simulations)  # Capacité de la batterie (en kWh) objectif1
-seuil = np.random.uniform(0, 1, nbre_simulations)  # Chute de tension maximale (en MW) objectif2
-dV_max =np.array([])
+seuil = np.random.uniform(0, 1000000, nbre_simulations)  # Chute de tension maximale (en MW) objectif2
+dV_max =[]
 
 for i in range(0,nbre_simulations):
     Pbatt = np.zeros(len(Pm))
@@ -316,9 +316,9 @@ for i in range(0,nbre_simulations):
     for j in range(1,len(VtrainBatt)):
         if VtrainBatt[j]<VtrainBatt[j-1]:
             temp1=VtrainBatt[j]
-            # print(VtrainBatt[j])
+            print(VtrainBatt[j])
             
-    dV_max=np.append(dV_max,VSST-temp1)
+    dV_max.append(VSST-temp1)
     # print(dV_max)
 
 # Affichage des solutions 
