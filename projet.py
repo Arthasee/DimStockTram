@@ -189,25 +189,28 @@ PSST = VSST**2 / RSST
 
 #%% Ajout de la batterie (en sst inversible)
 
-
-
-def modele_batterie(Pbatt,EbattMAX,Prheos,VtrainBatt,Pelec,seuil_test,Pseuil):
+def remplissage_P_elec(Pm):
+    # Initialisation
+    Pelec = np.zeros(len(Pm))
     
-    Ebatt0 = EbattMAX*3/4
-    Ebatt[0] = Ebatt0
     # Remplissage de Pelec, rendement de perte 0.8 
     for i in range(1, len(Pm)):
         if Pm[i]<=0:
             Pelec[i] = Pm[i]*0.8
         else:
             Pelec[i] = Pm[i]/0.8
-            
-        if seuil_test=='moitie':
-            seuil = 0.5 * np.max(Pelec)
-            # print(np.max(Pelec)) QUEL UNIT2???
-        else:
-            seuil=Pseuil
+    return Pelec     
 
+def gestion_batterie(Pelec,EbattMAX,seuil):
+    # Initialisation
+    Pbatt = np.zeros(len(Pelec))
+    Ebatt = np.zeros(len(Pelec))
+    Prheos = np.zeros(len(Pelec))
+    VtrainBatt = np.zeros(len(Pelec))
+    Ebatt0 = EbattMAX*3/4 # comment tu as choisi ca ? énoncé ?
+    Ebatt[0] = Ebatt0
+    
+    for i in range(1, len(Pelec)):
         # Loi de gestion de la batterie
         if (Pelec[i]<0 or V[i] == 0) and Ebatt[i-1] < EbattMAX:
             Pbatt[i] = abs(Pelec[i])
@@ -234,24 +237,20 @@ def modele_batterie(Pbatt,EbattMAX,Prheos,VtrainBatt,Pelec,seuil_test,Pseuil):
         racine = max(racine,0)
         vtrain = (VSST + np.sqrt(racine))/2
         VtrainBatt[i] = vtrain
+        # print(VtrainBatt[i])
+    return VtrainBatt,Ebatt,Pbatt
 
+Pelec=remplissage_P_elec(Pm)
+EbattMAX = 172*1e3 # choisi par Baptiste, comme test 172 kWh à discuter
+seuil = 0.5 * np.max(Pelec) # choisi par Baptiste, quel est l'unité de Pelec à discuter
+VtrainBatt,Ebatt,Pbatt=gestion_batterie(Pelec,EbattMAX,seuil)
 
-# Initialisation
-Pbatt = np.zeros(len(Pm))
-Ebatt = np.zeros(len(Pm))
-EbattMAX = 172*1e3
-Prheos = np.zeros(len(Pm))
-VtrainBatt = np.zeros(len(Pm))
-Pelec = np.zeros(len(Pm))
-seuil_test='moitie' #test
-Pseuil=0 # test
-modele_batterie(Pbatt,EbattMAX,Prheos,VtrainBatt,Pelec,seuil_test,Pseuil)
 
 # Affichage des solutions 
-trace(Times, Ebatt, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps")
-trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
-trace(Times, Pbatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps")
-trace(Times, VtrainBatt, "Temps[s]", "Vtrain", "Vtrain avec batterie en fonction du temps") #, [0, 140]
+# trace(Times, Ebatt, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps")
+# trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
+# trace(Times, Pbatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps")
+# trace(Times, VtrainBatt, "Temps[s]", "Vtrain", "Vtrain avec batterie en fonction du temps") #, [0, 140]
 
 
 #%% Dimmensionnement du système de stockage
@@ -284,46 +283,51 @@ chute_tension = np.random.uniform(10, 250, nbre_simulations)  # Chute de tension
 solutions_non_dominees=find_non_dominated_solution(capacite_batterie ,chute_tension,nbre_simulations)
 
 # Affichage des solutions 
-# plt.scatter(capacite_batterie, chute_tension, color = 'skyblue', label='Ensemble des solutions par la méthode de Monté - Carlo')
-# plt.scatter(capacite_batterie[solutions_non_dominees], chute_tension[solutions_non_dominees], color='red', label='Solutions non dominées')
-# plt.xlabel('Capacité en énergie de la batterie (kWh)')
-# plt.ylabel('Chute de tension maximale (V)')
-# plt.legend()
-# plt.show()
+plt.scatter(capacite_batterie, chute_tension, color = 'skyblue', label='Ensemble des solutions par la méthode de Monté - Carlo')
+plt.scatter(capacite_batterie[solutions_non_dominees], chute_tension[solutions_non_dominees], color='red', label='Solutions non dominées')
+# comment ca marche? plot une list de list
+plt.xlabel('Capacité en énergie de la batterie (kWh)')
+plt.ylabel('Chute de tension maximale (V)')
+plt.legend()
+plt.show()
 
 
 #%% Méthode de Monte-Carlo 2 
-print(len(Vtrain))
+
+
 # Nombre de simulations Monte-Carlo
 nbre_simulations = 1000 # fixé à priori
 
 # Paramètres à optimiser sont le cout et la chute de tension dv max --> le cout est proportionel à la capacité, plus la Pseuil est petit plus la batterie rentre en compte lorsquil ne faut pas et plus Pseuil est grand plus il y a une chute de tension --> parametre a optimiser capacité et chute de tension
-capacite_batterie = np.random.uniform(0, 200, nbre_simulations)  # Capacité de la batterie (en kWh) objectif1
-seuil = np.random.uniform(0, 1000000, nbre_simulations)  # Chute de tension maximale (en MW) objectif2
+capacite_batterie = np.random.uniform(0, 14, nbre_simulations)  # Capacité de la batterie (en kWh) objectif1
+seuil_random = np.random.uniform(0, 1, nbre_simulations)  # Chute de tension maximale (en MW) objectif2
 dV_max =[]
 
 for i in range(0,nbre_simulations):
-    Pbatt = np.zeros(len(Pm))
-    Ebatt = np.zeros(len(Pm))
-    EbattMAX = 172*1e3
-    Prheos = np.zeros(len(Pm))
-    VtrainBatt = np.zeros(len(Pm))
-    Pelec = np.zeros(len(Pm))
-    seuil_test='moitie' #test
-    Pseuil=0 # test
-    modele_batterie(Pbatt,capacite_batterie[i],Prheos,VtrainBatt,Pelec,'none',seuil[i])
+    VtrainBatt,Ebatt,Pbatt=gestion_batterie(Pelec,capacite_batterie[i],seuil_random[i])
     temp1=VSST-VtrainBatt[0]
     for j in range(1,len(VtrainBatt)):
         if VtrainBatt[j]<VtrainBatt[j-1]:
             temp1=VtrainBatt[j]
-            print(VtrainBatt[j])
-            
+            # print(temp1)
+            # print(VtrainBatt[j])
     dV_max.append(VSST-temp1)
     # print(dV_max)
 
+solutions_non_dominees=find_non_dominated_solution(capacite_batterie ,dV_max,nbre_simulations)
+seuil_correcte = np.zeros(len(Pelec))
+capacite_correcte = np.zeros(len(Pelec))
+
+for i in range(0,len(solutions_non_dominees)):
+    # cette simulation propose des valeurs non dominées
+    seuil_correcte=np.append(seuil_correcte,seuil_random[i])
+    capcite_correcte_correcte=np.append(capacite_correcte,capacite_batterie[i])
+    
+
 # Affichage des solutions 
 plt.subplot(211)
-plt.scatter(capacite_batterie, seuil, color = 'skyblue')
+plt.scatter(capacite_batterie, seuil_random, color = 'skyblue')
+plt.scatter(capacite_correcte,seuil_correcte,color='red')
 plt.xlabel('Capacité en énergie de la batterie (kWh)')
 plt.ylabel('P seuil (MW)')
 plt.title('Espace des solutions / de recherche')
@@ -333,6 +337,8 @@ plt.legend()
 
 plt.subplot(212)
 plt.scatter(capacite_batterie, dV_max, color = 'skyblue')
+for i in range(0, len(solutions_non_dominees)):
+    plt.scatter(capacite_batterie[solutions_non_dominees[i]], dV_max[solutions_non_dominees[i]], color='red', label='Solutions non dominées')
 plt.xlabel('Capacité en énergie de la batterie (kWh)')
 plt.ylabel('dV max (V)')
 plt.title('Espace des objectifs')
@@ -344,7 +350,7 @@ plt.tight_layout()
 plt.show()
 
 
-#%% Méthode NGSA2 ( non-sorted algorithm system)
+#%% Méthode NGSA2 (non-sorted algorithm system)
 
 """ Notes: Objectif: trouver un enssemble de solutions non-dominées appelées Paréto optimales. Identification de front de paréto 
 -> ensemble de solutions où aucune solution ne peut être améliorée dans un objectif sans détériorer un autre objectif.
