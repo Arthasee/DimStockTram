@@ -7,7 +7,7 @@ import copy
 import random
 
 #%% Création et conversion des données
-
+NB_SIMU= 1000
 VLAC = 750 #Volts
 VSST = 790 #Volts
 RSST = 33*1e-3 #mOhm
@@ -191,45 +191,48 @@ PSST = VSST**2 / RSST
 
 def remplissage_P_elec(Pm):
     # Initialisation
-    Pelec = np.zeros(len(Pm))
+    pelec = np.zeros(len(Pm))
     
     # Remplissage de Pelec, rendement de perte 0.8 
     for i in range(1, len(Pm)):
         if Pm[i]<=0:
-            Pelec[i] = Pm[i]*0.8
+            pelec[i] = Pm[i]*0.8
         else:
-            Pelec[i] = Pm[i]/0.8
-    return Pelec     
+            pelec[i] = Pm[i]/0.8
+    print(np.max(pelec))
+    return pelec     
 
-def gestion_batterie(Pelec,EbattMAX,seuil):
+def gestion_batterie(pelec,EbattMAX,seuil):
     # Initialisation
-    Pbatt = np.zeros(len(Pelec))
-    Ebatt = np.zeros(len(Pelec))
-    Prheos = np.zeros(len(Pelec))
-    VtrainBatt = np.zeros(len(Pelec))
-    Ebatt0 = EbattMAX*3/4 # comment tu as choisi ca ? énoncé ?
+    Pbatt = np.zeros(len(pelec))
+    Ebatt = np.zeros(len(pelec))
+    Prheos = np.zeros(len(pelec))
+    VtrainBatt = np.zeros(len(pelec))
+    VtrainBatt[0]=VSST 
+    # EbattMAX=capacite_batterie*VSST # energie batterie = capacite * v nominale et v nominale doit etre environ égale à la tension de LAC
+    Ebatt0 = EbattMAX*3.5/4 # comment tu as choisi ca ? énoncé ?
     Ebatt[0] = Ebatt0
     
-    for i in range(1, len(Pelec)):
+    for i in range(1, len(pelec)):
         # Loi de gestion de la batterie
-        if (Pelec[i]<0 or V[i] == 0) and Ebatt[i-1] < EbattMAX:
-            Pbatt[i] = abs(Pelec[i])
+        if (pelec[i]<0 or V[i] == 0) and Ebatt[i-1] < EbattMAX:
+            Pbatt[i] = abs(pelec[i])
             Ebatt[i] = Ebatt[i-1] + Pbatt[i]*1/3600
             if Ebatt[i] > EbattMAX:
                 Ebatt[i] = EbattMAX
-                Prheos[i] = Prheos[i-1] + Pelec[i] + (Ebatt[i]-EbattMAX)*3600
-        elif Pelec[i]> seuil and Pbatt[i-1] > 0:
+                Prheos[i] = Prheos[i-1] + pelec[i] + (Ebatt[i]-EbattMAX)*3600
+        elif pelec[i]> seuil and Pbatt[i-1] > 0:
             Pbatt[i] = Ebatt[i-1] * 3600
-            if Pelec[i] > Pbatt[i]:
-                Pelec[i] -= Pbatt[i]
+            if pelec[i] > Pbatt[i]:
+                pelec[i] -= Pbatt[i]
             else:
-                Ebatt[i] = Ebatt[i-1] - Pelec[i]*1/3600
-                Pelec[i] = 0
+                Ebatt[i] = Ebatt[i-1] - pelec[i]*1/3600
+                pelec[i] = 0
         else:
             Ebatt[i] = Ebatt[i-1]
             Pbatt[i] = Pbatt[i-1]
 
-        PLAC[i] = Pelec[i] - Pbatt[i] + Prheos[i]
+        PLAC[i] = pelec[i] - Pbatt[i] + Prheos[i]
         if PLAC[i] < 0:
             PLAC[i] = 0
         # print("Pbatt =", Pbatt[i], "Ebatt =", Ebatt[i], "PLAC =", PLAC[i])
@@ -238,12 +241,15 @@ def gestion_batterie(Pelec,EbattMAX,seuil):
         vtrain = (VSST + np.sqrt(racine))/2
         VtrainBatt[i] = vtrain
         # print(VtrainBatt[i])
+  
     return VtrainBatt,Ebatt,Pbatt
 
 Pelec=remplissage_P_elec(Pm)
-EbattMAX = 172*1e3 # choisi par Baptiste, comme test 172 kWh à discuter
-seuil = 0.5 * np.max(Pelec) # choisi par Baptiste, quel est l'unité de Pelec à discuter
-VtrainBatt,Ebatt,Pbatt=gestion_batterie(Pelec,EbattMAX,seuil)
+
+# EbattMax = 172*1e3# choisi par Baptiste, comme test 172 kWh à discuter
+
+# seuil = 0.5 * np.max(Pelec) # choisi par Baptiste, quel est l'unité de Pelec à discuter
+# VtrainBatt,Ebatt,Pbatt=gestion_batterie(Pelec,EbattMax,seuil)
 
 
 # Affichage des solutions 
@@ -274,60 +280,46 @@ def find_non_dominated_solution(objectif1, objectif2,nbre_simulations):
             
     return solutions_non_dominees
 
-# Nombre de simulations Monte-Carlo
-nbre_simulations = 1000 # fixé à priori
-# Stockage des résultats
-capacite_batterie = np.random.uniform(50, 200, nbre_simulations)  # Capacité de la batterie (en kWh) objectif1
-chute_tension = np.random.uniform(10, 250, nbre_simulations)  # Chute de tension maximale (en V) objectif2
-# Appel de la fonction
-solutions_non_dominees=find_non_dominated_solution(capacite_batterie ,chute_tension,nbre_simulations)
+# # Stockage des résultats
+# capacite_batterie = np.random.uniform(50, 200, NB_SIMU)  # Capacité de la batterie (en kWh) objectif1
+# chute_tension = np.random.uniform(10, 250, NB_SIMU)  # Chute de tension maximale (en V) objectif2
+# # Appel de la fonction
+# solutions_non_dominees=find_non_dominated_solution(capacite_batterie ,chute_tension,NB_SIMU)
 
-# Affichage des solutions 
-plt.scatter(capacite_batterie, chute_tension, color = 'skyblue', label='Ensemble des solutions par la méthode de Monté - Carlo')
-plt.scatter(capacite_batterie[solutions_non_dominees], chute_tension[solutions_non_dominees], color='red', label='Solutions non dominées')
-# comment ca marche? plot une list de list
-plt.xlabel('Capacité en énergie de la batterie (kWh)')
-plt.ylabel('Chute de tension maximale (V)')
-plt.legend()
-plt.show()
+# # Affichage des solutions 
+# plt.scatter(capacite_batterie, chute_tension, color = 'skyblue', label='Ensemble des solutions par la méthode de Monté - Carlo')
+# plt.scatter(capacite_batterie[solutions_non_dominees], chute_tension[solutions_non_dominees], color='red', label='Solutions non dominées')
+# # comment ca marche? plot une list de list
+# plt.xlabel('Capacité en énergie de la batterie (kWh)')
+# plt.ylabel('Chute de tension maximale (V)')
+# plt.legend()
+# plt.show()
 
 
 #%% Méthode de Monte-Carlo 2 
 
 
-# Nombre de simulations Monte-Carlo
-nbre_simulations = 1000 # fixé à priori
+def monte_carlo(nbre_simulations,capacite_batterie_random,seuil_random,pelec):
+    
+    dv_max =[]
+    vtrainbatt=np.zeros(len(pelec))
+    for i in range(nbre_simulations):
+        vtrainbatt, _, _ = gestion_batterie(pelec, capacite_batterie_random[i], seuil_random[i])
+        dv_max.append(VSST - np.min(vtrainbatt))
+        vtrainbatt=np.zeros(len(pelec))
+    return dv_max
 
 # Paramètres à optimiser sont le cout et la chute de tension dv max --> le cout est proportionel à la capacité, plus la Pseuil est petit plus la batterie rentre en compte lorsquil ne faut pas et plus Pseuil est grand plus il y a une chute de tension --> parametre a optimiser capacité et chute de tension
-capacite_batterie = np.random.uniform(0, 14, nbre_simulations)  # Capacité de la batterie (en kWh) objectif1
-seuil_random = np.random.uniform(0, 1, nbre_simulations)  # Chute de tension maximale (en MW) objectif2
-dV_max =[]
+capacite_batterie_random= np.random.uniform(50000, 200000, NB_SIMU)  # Capacité de la batterie (en kWh) objectif1
+seuil_random = np.random.uniform(1000, 1000000, NB_SIMU)  # Chute de tension maximale (en MW) objectif2
+dV_max=monte_carlo(NB_SIMU,capacite_batterie_random,seuil_random,Pelec)
+solutions_non_dominees=find_non_dominated_solution(capacite_batterie_random ,dV_max,NB_SIMU)
 
-for i in range(0,nbre_simulations):
-    VtrainBatt,Ebatt,Pbatt=gestion_batterie(Pelec,capacite_batterie[i],seuil_random[i])
-    temp1=VSST-VtrainBatt[0]
-    for j in range(1,len(VtrainBatt)):
-        if VtrainBatt[j]<VtrainBatt[j-1]:
-            temp1=VtrainBatt[j]
-            # print(temp1)
-            # print(VtrainBatt[j])
-    dV_max.append(VSST-temp1)
-    # print(dV_max)
-
-solutions_non_dominees=find_non_dominated_solution(capacite_batterie ,dV_max,nbre_simulations)
-seuil_correcte = np.zeros(len(Pelec))
-capacite_correcte = np.zeros(len(Pelec))
-
-for i in range(0,len(solutions_non_dominees)):
-    # cette simulation propose des valeurs non dominées
-    seuil_correcte=np.append(seuil_correcte,seuil_random[i])
-    capcite_correcte_correcte=np.append(capacite_correcte,capacite_batterie[i])
-    
 
 # Affichage des solutions 
 plt.subplot(211)
-plt.scatter(capacite_batterie, seuil_random, color = 'skyblue')
-plt.scatter(capacite_correcte,seuil_correcte,color='red')
+plt.scatter(capacite_batterie_random, seuil_random, color = 'skyblue')
+# plt.scatter(capacite_correcte,seuil_correcte,color='red')
 plt.xlabel('Capacité en énergie de la batterie (kWh)')
 plt.ylabel('P seuil (MW)')
 plt.title('Espace des solutions / de recherche')
@@ -336,9 +328,9 @@ plt.legend()
 
 
 plt.subplot(212)
-plt.scatter(capacite_batterie, dV_max, color = 'skyblue')
+plt.scatter(capacite_batterie_random, dV_max, color = 'skyblue')
 for i in range(0, len(solutions_non_dominees)):
-    plt.scatter(capacite_batterie[solutions_non_dominees[i]], dV_max[solutions_non_dominees[i]], color='red', label='Solutions non dominées')
+    plt.scatter(capacite_batterie_random[solutions_non_dominees[i]], dV_max[solutions_non_dominees[i]], color='red', label='Solutions non dominées')
 plt.xlabel('Capacité en énergie de la batterie (kWh)')
 plt.ylabel('dV max (V)')
 plt.title('Espace des objectifs')
@@ -391,9 +383,6 @@ def NGSA2(capacite_batterie,chute_tension,nb_generation,pop_size):
     P=[] # enssemble des "parents" pour chaque generation
     R=[] # enssemble créé avec parents + enfants donc de taille 2*N
 
-    
-    
-    
     
     fronts_pareto=[] 
     
