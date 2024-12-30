@@ -298,9 +298,7 @@ def find_non_dominated_solution(objectif1, objectif2,nbre_simulations):
 
 #%% Méthode de Monte-Carlo 2 
 
-
 def monte_carlo(nbre_simulations,capacite_batterie_random,seuil_random,pelec):
-    
     dv_max =[]
     vtrainbatt=np.zeros(len(pelec))
     for i in range(nbre_simulations):
