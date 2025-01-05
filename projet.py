@@ -350,7 +350,7 @@ def find_non_dominated_solution(objectif1, objectif2,nbre_simulations):
 
 #%% Méthode de Monte-Carlo 2 
 
-def monte_carlo(nbre_simulations,capacite_batterie_random,seuil_random,pelec):
+def monte_carlo(nbre_simulations,capacite_batterie_random,seuil_random,pelec, vsst = VSST):
     """Fonction de Monte-Carlo
 
     Args:
@@ -368,10 +368,8 @@ def monte_carlo(nbre_simulations,capacite_batterie_random,seuil_random,pelec):
     for i in range(nbre_simulations):
         vtrainbatt=np.zeros(len(pelec))
         vtrainbatt, _, _ = gestion_batterie(pelec, capacite_batterie_random[i], seuil_random[i])
-        dv_max.append(VSST - np.min(vtrainbatt))
+        dv_max.append(vsst - np.min(vtrainbatt))
         capacite_retour.append(capacite_batterie_random[i])
-            # print(dv_max[-1])
-        # vtrainbatt=np.zeros(len(pelec))
     return dv_max, capacite_retour
 
 # Paramètres à optimiser sont le cout et la chute de tension dv max -->
@@ -391,7 +389,7 @@ Solutions_non_dominees=find_non_dominated_solution(Capacite_retour ,dV_max,NB_SI
 
 
 
-# Affichage des solutions 
+# Affichage des solutions
 plt.subplot(211)
 plt.scatter(Capacite_batterie_random, Seuil_random, color = 'skyblue')
 # plt.scatter(capacite_correcte,seuil_correcte,color='red')
@@ -405,8 +403,8 @@ plt.legend()
 plt.subplot(212)
 plt.scatter(Capacite_retour, dV_max, color = 'skyblue')
 for ii, sol in enumerate(Solutions_non_dominees):
-    plt.scatter(Capacite_retour[Solutions_non_dominees[ii]],
-                dV_max[Solutions_non_dominees[ii]], color='red', label='Solutions non dominées')
+    plt.scatter(Capacite_retour[sol],
+                dV_max[sol], color='red', label='Solutions non dominées')
 plt.xlabel('Capacité en énergie de la batterie (kWh)')
 plt.ylabel('dV max (V)')
 plt.title('Espace des objectifs')
