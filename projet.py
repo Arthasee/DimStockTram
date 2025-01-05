@@ -1,16 +1,18 @@
+"""Fichier pour le projet d'Optimisation
+"""
 #%% Imports
 
+import random
+import copy
 import numpy as np
 import matplotlib.pyplot as plt
 from help_function import *
-import copy
-import random
 
 #%% Création et conversion des données
-NB_SIMU= 10000
+NB_SIMU= 100
 VLAC = 750 #Volts
 VSST = 790 #Volts
-RSST = 33*1e-3 #mOhm 
+RSST = 33*1e-3 #mOhm
 RHOLAC = 131e-6 # Ohm/m
 RHORAIL = 18e-6 # Ohm/m
 
@@ -22,8 +24,12 @@ RLAC1 = [] # Résistance de la LAC entre la sous-station 1 et le train (valeurs 
 RLAC2 = [] # Résistance de la LAC entre la sous-station 2 et le train (valeurs dépendante de x)
 Rrail1 = [] # Résistance du rail entre la sous-station 1 et le train (valeurs dépendante de x)
 Rrail2 = [] # Résistance du rail entre la sous-station 2 et le train (valeurs dépendante de x)
-R1 = [] # Résistance équivalente pour la partie supérieure du schéma de Thévenin, traversée par le courant I1 (dépend de x)
-R2 = [] # Résistance équivalente pour la partie inférieure du schéma de Thévenin, traversée par le courant I2 (dépend de x)
+# Résistance équivalente pour la partie supérieure du schéma de Thévenin,
+# traversée par le courant I1 (dépend de x)
+R1 = []
+# Résistance équivalente pour la partie inférieure du schéma de Thévenin,
+# traversée par le courant I2(dépend de x)
+R2 = []
 Req = [] # Résistance équivalente totale du schéma de Thévenin (dépend de x)
 PLAC = [] #Puissance de la LAC (dépend de x)
 Vtrain = [] #Tension du train à tout instant (dépend de x)
@@ -31,7 +37,7 @@ Itrain = [] #Intensité aux bornes du train à tout moment (dépend de x)
 I1 = [] #Intensité de la partie supérieure du schéma de Thévenin
 I2 = [] #Intensité de la partie inférieure du schéma de Thévenin
 
-alpha = 0 # angle de la pente du chemin
+ALPHA = 0 # angle de la pente du chemin
 M = 70*1e3 #tonnes masse du train
 A0 = 780 #N constante forces
 A1 = 6.4*1e-3 #N/tonnes constante accélération
@@ -54,7 +60,7 @@ Acc = get_Acc(Times, V)
 
 FR = (A0 + A1*M) + (B0 + B1*M)*V + (C0 + C1*M)*V**2 # Force resistive
 
-Fm = M*Acc + M*9.81*np.sin(alpha) + FR # Force mécanique - ici alpha = 0
+Fm = M*Acc + M*9.81*np.sin(ALPHA) + FR # Force mécanique - ici alpha = 0
 
 Pm = Fm*V
 
@@ -94,10 +100,15 @@ Vtrain = np.array(Vtrain)
 # Calcul de Itrain :
 Itrain = VSST - Vtrain/Req
 
-# Calcul de I1 : 
-# On sait d'après la loi des mailles que V1 - V2 = 0, donc V1 = V2, donc R1 * I1 = R2 * I2, donc I2 = (R1 * I1)/R2
-# D'après la loi des noeuds, I1 + I2 = Itrain, donc en remplaçant I2 par son expression en fonction de I1 on obtient :
-# I1 + (R1 * I1)/R2 = Itrain, donc I1(R2 + R1)/R2 = Itrain, donc I1 = (R2 * Itrain)/(R1 + R2)
+# Calcul de I1 :
+# On sait d'après la loi des mailles que V1 - V2 = 0, donc V1 = V2,
+# donc R1 * I1 = R2 * I2, donc I2 = (R1 * I1)/R2
+
+# D'après la loi des noeuds, I1 + I2 = Itrain, donc en remplaçant I2
+# par son expression en fonction de I1 on obtient :
+
+# I1 + (R1 * I1)/R2 = Itrain, donc I1(R2 + R1)/R2 = Itrain,
+# donc I1 = (R2 * Itrain)/(R1 + R2)
 I1 = (R2*Itrain)/(R1+R2)
 
 # Calcul de I2 :
@@ -189,62 +200,83 @@ PSST = VSST**2 / RSST
 
 #%% Ajout de la batterie (en sst inversible)
 
-def remplissage_P_elec(Pm):
-    # Initialisation
-    pelec = np.zeros(len(Pm))
-    
-    # Remplissage de Pelec, rendement de perte 0.8 
-    for i in range(1, len(Pm)):
-        if Pm[i]<=0:
-            pelec[i] = Pm[i]*0.8
-        else:
-            pelec[i] = Pm[i]/0.8
-    print(np.max(pelec))
-    return pelec     
+def remplissage_p_elec(pm):
+    """Fonction permettant de remplir la puissance électronique nécessaire
 
-def gestion_batterie(pelec,EbattMAX,seuil, v = V, vsst = VSST, plac = PLAC):
+    Args:
+        pm (Array): Puissance mécanique
+
+    Returns:
+        Array: Puissance électronique
+    """
+
     # Initialisation
-    Pbatt = np.zeros(len(pelec))
-    Ebatt = np.zeros(len(pelec))
-    Prheos = np.zeros(len(pelec))
-    VtrainBatt = np.zeros(len(pelec))
-    VtrainBatt[0]=vsst
-    # EbattMAX=capacite_batterie*VSST # energie batterie = capacite * v nominale et v nominale doit etre environ égale à la tension de LAC
-    Ebatt0 = EbattMAX*3/4 # comment tu as choisi ca ? énoncé ?
-    Ebatt[0] = Ebatt0
-    
+    pelec = np.zeros(len(pm))
+
+    # Remplissage de Pelec, rendement de perte 0.8
+    for i in range(1, len(pm)):
+        if pm[i]<=0:
+            pelec[i] = pm[i]*0.8
+        else:
+            pelec[i] = pm[i]/0.8
+    print(np.max(pelec))
+    return pelec 
+
+def gestion_batterie(pelec,ebatt_max,seuil, v = V, vsst = VSST, plac = PLAC):
+    """Fonction calculant la gestion de la batterie pour chaque pas de temps
+
+    Args:
+        pelec (Array): Puissance électronique nécessaire
+        EbattMAX (int): Capacité de la Batterie
+        seuil (int): Seuil où la batterie doit intervenir
+        v (Array, optional): Vitesse. Defaults to V.
+        vsst (int, optional): Tension nominale. Defaults to VSST.
+        plac (Array, optional): Puissance de la LAC. Defaults to PLAC.
+
+    Returns:
+        Tuple: Liste de la Tension du Train, de l'Energie de la batterie et de sa puissance
+    """
+    # Initialisation
+    pbatt = np.zeros(len(pelec))
+    ebatt = np.zeros(len(pelec))
+    p_rheos = np.zeros(len(pelec))
+    v_train_batt = np.zeros(len(pelec))
+    v_train_batt[0]=vsst
+    ebatt0 = ebatt_max*3/4 # comment tu as choisi ca ? énoncé ?
+    ebatt[0] = ebatt0
+
     for i in range(1, len(pelec)):
         # Loi de gestion de la batterie
-        if (pelec[i]<0 or v[i] == 0) and Ebatt[i-1] < EbattMAX:
-            Pbatt[i] = abs(pelec[i])
-            Ebatt[i] = Ebatt[i-1] + Pbatt[i]*1/3600
-            if Ebatt[i] > EbattMAX:
-                Ebatt[i] = EbattMAX
-                Prheos[i] = Prheos[i-1] + pelec[i] + (Ebatt[i]-EbattMAX)*3600
-        elif pelec[i]> seuil and Pbatt[i-1] > 0:
-            Pbatt[i] = Ebatt[i-1] * 3600
-            if pelec[i] > Pbatt[i]:
-                pelec[i] -= Pbatt[i]
+        if (pelec[i]<0 or v[i] == 0) and ebatt[i-1] < ebatt_max:
+            pbatt[i] = abs(pelec[i])
+            ebatt[i] = ebatt[i-1] + pbatt[i]*1/3600
+            if ebatt[i] > ebatt_max:
+                ebatt[i] = ebatt_max
+                p_rheos[i] = p_rheos[i-1] + pelec[i] + (ebatt[i]-ebatt_max)*3600
+        elif pelec[i]> seuil and pbatt[i-1] > 0:
+            pbatt[i] = ebatt[i-1] * 3600
+            if pelec[i] > pbatt[i]:
+                pelec[i] -= pbatt[i]
             else:
-                Ebatt[i] = Ebatt[i-1] - pelec[i]*1/3600
+                ebatt[i] = ebatt[i-1] - pelec[i]*1/3600
                 pelec[i] = 0
         else:
-            Ebatt[i] = Ebatt[i-1]
-            Pbatt[i] = Pbatt[i-1]
+            ebatt[i] = ebatt[i-1]
+            pbatt[i] = pbatt[i-1]
 
-        plac[i] = pelec[i] - Pbatt[i] + Prheos[i]
+        plac[i] = pelec[i] - pbatt[i] + p_rheos[i]
         if plac[i] < 0:
             plac[i] = 0
         # print("Pbatt =", Pbatt[i], "Ebatt =", Ebatt[i], "PLAC =", PLAC[i])
         racine = vsst**2 - 4*Req[i]*(plac[i]/0.8)
         racine = max(racine,0)
         vtrain = (vsst + np.sqrt(racine))/2
-        VtrainBatt[i] = vtrain
+        v_train_batt[i] = vtrain
         # print(VtrainBatt[i])
-  
-    return VtrainBatt,Ebatt,Pbatt
 
-Pelec=remplissage_P_elec(Pm)
+    return v_train_batt,ebatt,pbatt
+
+Pelec=remplissage_p_elec(Pm)
 
 # EbattMax = 18*1e3
 
@@ -252,43 +284,63 @@ Pelec=remplissage_P_elec(Pm)
 # VTrainBatt,EBatt,PBatt=gestion_batterie(Pelec,EbattMax,Seuil)
 
 
-# # Affichage des solutions 
-# trace(Times, EBatt, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps")
+# # Affichage des solutions
+# trace(Times, EBatt, "Temps[s]", "Energie de la batterie",
+#        "Energie de la batterie en fonction du temps")
 # trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
 # trace(Times, PBatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps")
-# trace(Times, VTrainBatt, "Temps[s]", "Vtrain", "Vtrain avec batterie en fonction du temps") #, [0, 140]
+# trace(Times, VTrainBatt, "Temps[s]", "Vtrain",
+#         "Vtrain avec batterie en fonction du temps") #, [0, 140]
 
 
 #%% Dimmensionnement du système de stockage
-#construction de l’ensemble des solutions non dominées pour les critères « Capacité en énergie de la batterie » et « Chute de tension maximale » (qui est la différence entre la tension nominale (750V) et la tension réelle mesurée aux bornes du train.)
+# construction de l’ensemble des solutions non dominées pour les critères
+# « Capacité en énergie de la batterie » et « Chute de tension maximale »
+# (qui est la différence entre la tension nominale (750V) et
+# la tension réelle mesurée aux bornes du train.)
 
 #%% Méthode de Monte-Carlo
 
 # Construire les solutions non dominées
 
 def find_non_dominated_solution(objectif1, objectif2,nbre_simulations):
+    """Fonction trouvant les solutions non-dominées
+
+    Args:
+        objectif1 (Array): Premier objectif à analyser
+        objectif2 (Array): Deuxième objectif à analyser
+        nbre_simulations (int): Nombre de simulation
+
+    Returns:
+        Array: Ensemble des solutions non-dominées
+    """
     solutions_non_dominees = []
     for i in range(nbre_simulations):
         is_dominated = False
         for j in range(nbre_simulations):
-            if (objectif1[j] <= objectif1[i] and objectif2[j] <= objectif2[i] and 
+            if (objectif1[j] <= objectif1[i] and objectif2[j] <= objectif2[i] and
                 (objectif1[j] < objectif1[i] or objectif2[j] < objectif2[i])):
                 is_dominated = True
                 break
         if not is_dominated:
             solutions_non_dominees.append(i)
-            
+
     return solutions_non_dominees
 
 # # Stockage des résultats
-# capacite_batterie = np.random.uniform(50, 200, NB_SIMU)  # Capacité de la batterie (en kWh) objectif1
+
+# # Capacité de la batterie (en kWh) objectif1
+# capacite_batterie = np.random.uniform(50, 200, NB_SIMU)
 # chute_tension = np.random.uniform(10, 250, NB_SIMU)  # Chute de tension maximale (en V) objectif2
 # # Appel de la fonction
 # solutions_non_dominees=find_non_dominated_solution(capacite_batterie ,chute_tension,NB_SIMU)
 
-# # Affichage des solutions 
-# plt.scatter(capacite_batterie, chute_tension, color = 'skyblue', label='Ensemble des solutions par la méthode de Monté - Carlo')
-# plt.scatter(capacite_batterie[solutions_non_dominees], chute_tension[solutions_non_dominees], color='red', label='Solutions non dominées')
+# # Affichage des solutions
+# plt.scatter(capacite_batterie, chute_tension, color = 'skyblue',
+#               label='Ensemble des solutions par la méthode de Monté - Carlo')
+# plt.scatter(capacite_batterie[solutions_non_dominees],
+#               chute_tension[solutions_non_dominees], color='red', label='Solutions non dominées')
+
 # # comment ca marche? plot une list de list
 # plt.xlabel('Capacité en énergie de la batterie (kWh)')
 # plt.ylabel('Chute de tension maximale (V)')
@@ -322,7 +374,11 @@ def monte_carlo(nbre_simulations,capacite_batterie_random,seuil_random,pelec):
         # vtrainbatt=np.zeros(len(pelec))
     return dv_max, capacite_retour
 
-# Paramètres à optimiser sont le cout et la chute de tension dv max --> le cout est proportionel à la capacité, plus la Pseuil est petit plus la batterie rentre en compte lorsquil ne faut pas et plus Pseuil est grand plus il y a une chute de tension --> parametre a optimiser capacité et chute de tension
+# Paramètres à optimiser sont le cout et la chute de tension dv max -->
+# le cout est proportionel à la capacité,
+# plus la Pseuil est petit plus la batterie rentre en compte lorsquil ne faut pas
+# et plus Pseuil est grand plus il y a une chute de tension -->
+# parametre a optimiser capacité et chute de tension
 
 # Capacité de la batterie (en kWh) objectif1
 Capacite_batterie_random=  np.random.uniform(0, 200000, NB_SIMU)
@@ -348,8 +404,9 @@ plt.legend()
 
 plt.subplot(212)
 plt.scatter(Capacite_retour, dV_max, color = 'skyblue')
-for ii in range(0, len(Solutions_non_dominees)):
-    plt.scatter(Capacite_retour[Solutions_non_dominees[ii]], dV_max[Solutions_non_dominees[ii]], color='red', label='Solutions non dominées')
+for ii, sol in enumerate(Solutions_non_dominees):
+    plt.scatter(Capacite_retour[Solutions_non_dominees[ii]],
+                dV_max[Solutions_non_dominees[ii]], color='red', label='Solutions non dominées')
 plt.xlabel('Capacité en énergie de la batterie (kWh)')
 plt.ylabel('dV max (V)')
 plt.title('Espace des objectifs')
