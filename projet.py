@@ -219,8 +219,7 @@ def remplissage_p_elec(pm):
             pelec[i] = pm[i]*0.8
         else:
             pelec[i] = pm[i]/0.8
-    print(np.max(pelec))
-    return pelec 
+    return pelec
 
 def gestion_batterie(pelec,ebatt_max,seuil, v = V, vsst = VSST, plac = PLAC):
     """Fonction calculant la gestion de la batterie pour chaque pas de temps
@@ -244,16 +243,22 @@ def gestion_batterie(pelec,ebatt_max,seuil, v = V, vsst = VSST, plac = PLAC):
     v_train_batt[0]=vsst
     ebatt0 = ebatt_max*3/4 # comment tu as choisi ca ? énoncé ?
     ebatt[0] = ebatt0
+    pbatt[0] = ebatt[0]*3600
+    compt_if = 0
+    compt_elif = 0
+    compt_else = 0
 
     for i in range(1, len(pelec)):
         # Loi de gestion de la batterie
-        if (pelec[i]<0 or v[i] == 0) and ebatt[i-1] < ebatt_max:
+        if (pelec[i]<0 ) and ebatt[i-1] <= ebatt_max: #or v[i] == 0
+            compt_if += 1
             pbatt[i] = abs(pelec[i])
             ebatt[i] = ebatt[i-1] + pbatt[i]*1/3600
             if ebatt[i] > ebatt_max:
-                ebatt[i] = ebatt_max
                 p_rheos[i] = p_rheos[i-1] + pelec[i] + (ebatt[i]-ebatt_max)*3600
+                ebatt[i] = ebatt_max
         elif pelec[i]> seuil and pbatt[i-1] > 0:
+            compt_elif +=1
             pbatt[i] = ebatt[i-1] * 3600
             if pelec[i] > pbatt[i]:
                 pelec[i] -= pbatt[i]
@@ -261,6 +266,7 @@ def gestion_batterie(pelec,ebatt_max,seuil, v = V, vsst = VSST, plac = PLAC):
                 ebatt[i] = ebatt[i-1] - pelec[i]*1/3600
                 pelec[i] = 0
         else:
+            compt_else += 1
             ebatt[i] = ebatt[i-1]
             pbatt[i] = pbatt[i-1]
 
@@ -273,18 +279,17 @@ def gestion_batterie(pelec,ebatt_max,seuil, v = V, vsst = VSST, plac = PLAC):
         vtrain = (vsst + np.sqrt(racine))/2
         v_train_batt[i] = vtrain
         # print(VtrainBatt[i])
-
+    print(f'if {compt_if}, elif {compt_elif}, else {compt_else}')
     return v_train_batt,ebatt,pbatt
 
 Pelec=remplissage_p_elec(Pm)
+EbattMax = 18*1e3
 
-# EbattMax = 18*1e3
-
-# Seuil = 0.5 * np.max(Pelec) # choisi par Baptiste, quel est l'unité de Pelec à discuter
-# VTrainBatt,EBatt,PBatt=gestion_batterie(Pelec,EbattMax,Seuil)
+Seuil = 0.5 * np.max(Pelec) # choisi par Baptiste, quel est l'unité de Pelec à discuter
+VTrainBatt,EBatt,PBatt=gestion_batterie(Pelec,EbattMax,Seuil)
 
 
-# # Affichage des solutions
+# Affichage des solutions
 # trace(Times, EBatt, "Temps[s]", "Energie de la batterie",
 #        "Energie de la batterie en fonction du temps")
 # trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
@@ -348,7 +353,7 @@ def find_non_dominated_solution(objectif1, objectif2,nbre_simulations):
 # plt.show()
 
 
-#%% Méthode de Monte-Carlo 2 
+#%% Méthode de Monte-Carlo 2
 
 def monte_carlo(nbre_simulations,capacite_batterie_random,seuil_random,pelec, vsst = VSST):
     """Fonction de Monte-Carlo
@@ -366,8 +371,10 @@ def monte_carlo(nbre_simulations,capacite_batterie_random,seuil_random,pelec, vs
     capacite_retour = []
     vtrainbatt=np.zeros(len(pelec))
     for i in range(nbre_simulations):
+        pelec = remplissage_p_elec(Pm)
         vtrainbatt=np.zeros(len(pelec))
         vtrainbatt, _, _ = gestion_batterie(pelec, capacite_batterie_random[i], seuil_random[i])
+        print(np.min(vtrainbatt))
         dv_max.append(vsst - np.min(vtrainbatt))
         capacite_retour.append(capacite_batterie_random[i])
     return dv_max, capacite_retour
@@ -379,15 +386,15 @@ def monte_carlo(nbre_simulations,capacite_batterie_random,seuil_random,pelec, vs
 # parametre a optimiser capacité et chute de tension
 
 # Capacité de la batterie (en kWh) objectif1
-Capacite_batterie_random=  np.random.uniform(0, 200000, NB_SIMU)
+Capacite_batterie_random=  np.random.uniform(0, 14000, NB_SIMU)
 
 # Chute de tension maximale (en MW) objectif2
-Seuil_random = np.random.uniform(0.1*np.max(Pelec), 0.9*np.max(Pelec), NB_SIMU)
+Seuil_random = np.random.uniform(0, 5000, NB_SIMU)
 
 dV_max, Capacite_retour=monte_carlo(NB_SIMU,Capacite_batterie_random,Seuil_random,Pelec)
 Solutions_non_dominees=find_non_dominated_solution(Capacite_retour ,dV_max,NB_SIMU)
 
-
+print(Capacite_batterie_random)
 
 # Affichage des solutions
 plt.subplot(211)
@@ -401,7 +408,7 @@ plt.legend()
 
 
 plt.subplot(212)
-plt.scatter(Capacite_retour, dV_max, color = 'skyblue')
+plt.scatter(Capacite_batterie_random, dV_max, color = 'skyblue')
 for ii, sol in enumerate(Solutions_non_dominees):
     plt.scatter(Capacite_retour[sol],
                 dV_max[sol], color='red', label='Solutions non dominées')
@@ -415,12 +422,12 @@ plt.legend()
 plt.tight_layout()
 plt.show()
 
-# joulou = np.random.randint(0, len(Capacite_retour), 1)
+joulou = np.random.randint(0, len(Capacite_retour), 1)
 
-# EbattMax = Capacite_retour[joulou[0]]
-# Seuil = Seuil_random[np.random.randint(0, len(Seuil_random), 1)]
+EbattMax = Capacite_retour[joulou[0]]
+Seuil = Seuil_random[joulou] #np.random.randint(0, len(Seuil_random), 1)
 
-# VTrainBatt,EBatt,PBatt=gestion_batterie(Pelec,EbattMax,Seuil)
+VTrainBatt,EBatt,PBatt=gestion_batterie(Pelec,EbattMax,Seuil)
 
 # trace(Times, EBatt, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps")
 # trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
