@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from help_function import *
 
 #%% Création et conversion des données
-NB_SIMU= 10
+NB_SIMU= 100
 VLAC = 750 #Volts
 VSST = 790 #Volts
 RSST = 33*1e-3 #mOhm
@@ -290,12 +290,12 @@ VTrainBatt,EBatt,PBatt=gestion_batterie(Pelec,EbattMax,Seuil)
 
 
 # Affichage des solutions
-# trace(Times, EBatt, "Temps[s]", "Energie de la batterie",
-#        "Energie de la batterie en fonction du temps")
-# trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
-# trace(Times, PBatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps")
-# trace(Times, VTrainBatt, "Temps[s]", "Vtrain",
-#         "Vtrain avec batterie en fonction du temps") #, [0, 140]
+trace(Times, EBatt, "Temps[s]", "Energie de la batterie",
+       "Energie de la batterie en fonction du temps")
+trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
+trace(Times, PBatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps")
+trace(Times, VTrainBatt, "Temps[s]", "Vtrain",
+        "Vtrain avec batterie en fonction du temps") #, [0, 140]
 
 
 #%% Dimmensionnement du système de stockage
@@ -370,11 +370,11 @@ def monte_carlo(nbre_simulations,capacite_batterie_random,seuil_random,pelec, vs
     dv_max =[]
     vtrainbatt=np.zeros(len(pelec))
     for i in range(nbre_simulations):
-        pelec = remplissage_p_elec(Pm)
+        pelecc = remplissage_p_elec(Pm)
         placc = vlac**2/(rlac1+rlac2)
         vtrainbatt=np.zeros(len(pelec))
-        vtrainbatt, _, _ = gestion_batterie(pelec, capacite_batterie_random[i], seuil_random[i], plac = placc)
-        dv_max.append(vsst - np.min(vtrainbatt))
+        vtrainbatt, _, _ = gestion_batterie(pelecc, capacite_batterie_random[i], seuil_random[i], plac = placc)
+        dv_max.append(vsst - min(vtrainbatt))
     return dv_max
 
 # Paramètres à optimiser sont le cout et la chute de tension dv max -->
@@ -393,16 +393,16 @@ Seuil_random = np.random.uniform(0, 5000, NB_SIMU)
 dV_max =[]
 vtrainbatt=np.zeros(len(Pelec))
 for i in range(NB_SIMU):
-    pelec = remplissage_p_elec(Pm)
+    pelecc = remplissage_p_elec(Pm)
     placc = VLAC**2/(RLAC1+RLAC2)
     vtrainbatt=np.zeros(len(Pelec))
-    vtrainbatt, ebattt, pbattt = gestion_batterie(pelec, Capacite_batterie_random[i], Seuil_random[i], plac = placc)
+    vtrainbatt, ebattt, pbattt = gestion_batterie(pelecc, Capacite_batterie_random[i], Seuil_random[i], plac = placc)
+    print(vtrainbatt)
     dV_max.append(VSST - np.min(vtrainbatt))
 
 # dV_max=monte_carlo(NB_SIMU,Capacite_batterie_random,Seuil_random,Pelec)
 Solutions_non_dominees=find_non_dominated_solution(Capacite_batterie_random ,dV_max,NB_SIMU)
 
-print(Capacite_batterie_random)
 
 # Affichage des solutions
 plt.subplot(211)
@@ -435,9 +435,9 @@ joulou = np.random.randint(0, len(Capacite_batterie_random), 1)
 EbattMax = Capacite_batterie_random[joulou[0]]
 Seuil = Seuil_random[joulou] #np.random.randint(0, len(Seuil_random), 1)
 
-pelec = remplissage_p_elec(Pm)
+pelecc = remplissage_p_elec(Pm)
 placc = VLAC**2/(RLAC1+RLAC2)
-VTrainBatt,EBatt,PBatt=gestion_batterie(pelec,EbattMax,Seuil, plac = placc)
+VTrainBatt,EBatt,PBatt=gestion_batterie(pelecc,EbattMax,Seuil, plac = placc)
 
 # trace(Times, EBatt, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps")
 # trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
