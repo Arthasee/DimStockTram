@@ -355,7 +355,7 @@ def find_non_dominated_solution(objectif1, objectif2,nbre_simulations):
 
 #%% Méthode de Monte-Carlo 2
 
-def monte_carlo(nbre_simulations,capacite_batterie_random,seuil_random,pelec, vsst = VSST):
+def monte_carlo(nbre_simulations,capacite_batterie_random,seuil_random,pelec, vsst = VSST, placc = PLAC, vlac = VLAC, rlac1 = RLAC1, rlac2 = RLAC2):
     """Fonction de Monte-Carlo
 
     Args:
@@ -372,8 +372,9 @@ def monte_carlo(nbre_simulations,capacite_batterie_random,seuil_random,pelec, vs
     vtrainbatt=np.zeros(len(pelec))
     for i in range(nbre_simulations):
         pelec = remplissage_p_elec(Pm)
+        placc = vlac**2/(rlac1+rlac2)
         vtrainbatt=np.zeros(len(pelec))
-        vtrainbatt, _, _ = gestion_batterie(pelec, capacite_batterie_random[i], seuil_random[i])
+        vtrainbatt, _, _ = gestion_batterie(pelec, capacite_batterie_random[i], seuil_random[i], plac = placc)
         print(np.min(vtrainbatt))
         dv_max.append(vsst - np.min(vtrainbatt))
         capacite_retour.append(capacite_batterie_random[i])
