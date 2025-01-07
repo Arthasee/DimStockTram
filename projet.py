@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from help_function import *
 
 #%% Création et conversion des données
-NB_SIMU= 10
+NB_SIMU= 1000
 VLAC = 750 #Volts
 VSST = 790 #Volts
 RSST = 33*1e-3 #mOhm
@@ -275,18 +275,22 @@ def gestion_batterie(pelec,ebatt_max,seuil, req = Req, vsst = VSST, plac = PLAC)
             plac[i] = 0
         # print("Pbatt =", Pbatt[i], "Ebatt =", Ebatt[i], "PLAC =", PLAC[i])
         racine = vsst**2 - 4*req[i]*(plac[i]/0.8)
+        # print(plac[i])
+        # print(req[i])
         racine = max(racine,0)
         vtrain = (vsst + np.sqrt(racine))/2
         v_train_batt.append(vtrain)
+    # print(v_train_batt)
         # print(VtrainBatt[i])
-    print(f'if {compt_if}, elif {compt_elif}, else {compt_else}, {np.min(v_train_batt)}')
+    # print(f'if {compt_if}, elif {compt_elif}, else {compt_else}, {np.min(v_train_batt)}')
+    
     return v_train_batt,ebatt,pbatt
 
 Pelec=remplissage_p_elec(Pm)
-EbattMax = 18*1e3
+# EbattMax = 18*1e3
 
-Seuil = 0.5 * np.max(Pelec) # choisi par Baptiste, quel est l'unité de Pelec à discuter
-VTrainBatt,EBatt,PBatt=gestion_batterie(Pelec,EbattMax,Seuil)
+# Seuil = 0.5 * np.max(Pelec) # choisi par Baptiste, quel est l'unité de Pelec à discuter
+# VTrainBatt,EBatt,PBatt=gestion_batterie(Pelec,EbattMax,Seuil)
 
 
 # Affichage des solutions
@@ -329,7 +333,6 @@ def find_non_dominated_solution(objectif1, objectif2,nbre_simulations):
                 break
         if not is_dominated:
             solutions_non_dominees.append(i)
-
     return solutions_non_dominees
 
 # # Stockage des résultats
@@ -355,7 +358,7 @@ def find_non_dominated_solution(objectif1, objectif2,nbre_simulations):
 
 #%% Méthode de Monte-Carlo 2
 
-def monte_carlo(nbre_simulations,capacite_batterie_random,seuil_random,pelec, vsst = VSST, placc = PLAC, vlac = VLAC, rlac1 = RLAC1, rlac2 = RLAC2):
+def monte_carlo(nbre_simulations,capacite_batterie_random,seuil_random, pelec, vsst = VSST, placc = PLAC, vlac = VLAC, rlac1 = RLAC1, rlac2 = RLAC2):
     """Fonction de Monte-Carlo
 
     Args:
@@ -368,11 +371,9 @@ def monte_carlo(nbre_simulations,capacite_batterie_random,seuil_random,pelec, vs
         Tuple: La liste de la chute de tension max pour chaque essai et la liste des capacités
     """
     dv_max =[]
-    vtrainbatt=np.zeros(len(pelec))
     for i in range(nbre_simulations):
         pelec = remplissage_p_elec(Pm)
         placc = vlac**2/(rlac1+rlac2)
-        vtrainbatt=np.zeros(len(pelec))
         vtrainbatt, _, _ = gestion_batterie(pelec, capacite_batterie_random[i], seuil_random[i], plac = placc)
         dv_max.append(vsst - np.min(vtrainbatt))
     return dv_max
@@ -384,25 +385,23 @@ def monte_carlo(nbre_simulations,capacite_batterie_random,seuil_random,pelec, vs
 # parametre a optimiser capacité et chute de tension
 
 # Capacité de la batterie (en kWh) objectif1
-Capacite_batterie_random=  np.random.uniform(0, 14000, NB_SIMU)
+Capacite_batterie_random=  np.random.uniform(0, 200000, NB_SIMU)
 
 # Chute de tension maximale (en MW) objectif2
-Seuil_random = np.random.uniform(0, 5000, NB_SIMU)
+Seuil_random = np.random.uniform(0, 1000000, NB_SIMU)
 
 
 dV_max =[]
-vtrainbatt=np.zeros(len(Pelec))
 for i in range(NB_SIMU):
     pelec = remplissage_p_elec(Pm)
     placc = VLAC**2/(RLAC1+RLAC2)
-    vtrainbatt=np.zeros(len(Pelec))
     vtrainbatt, ebattt, pbattt = gestion_batterie(pelec, Capacite_batterie_random[i], Seuil_random[i], plac = placc)
     dV_max.append(VSST - np.min(vtrainbatt))
 
 # dV_max=monte_carlo(NB_SIMU,Capacite_batterie_random,Seuil_random,Pelec)
 Solutions_non_dominees=find_non_dominated_solution(Capacite_batterie_random ,dV_max,NB_SIMU)
 
-print(Capacite_batterie_random)
+# print(Capacite_batterie_random)
 
 # Affichage des solutions
 plt.subplot(211)
@@ -469,9 +468,6 @@ Ref:
 https://www.mechanics-industry.org/articles/meca/pdf/2010/03/mi100066.pdf
 https://moodle-sciences-24.sorbonne-universite.fr/pluginfile.php/227541/mod_resource/content/1/142199_BOUKIR%20_2023_archivage.pdf THESE
 https://moodle-sciences-24.sorbonne-universite.fr/pluginfile.php/225975/mod_resource/content/1/OPTIM_2425_Presentation_projet.pdf SLIDE
-
-
-
 """
 
 """ Notes de la thèse: 
