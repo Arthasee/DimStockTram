@@ -241,7 +241,7 @@ def gestion_batterie(pelec,ebatt_max,seuil, req = Req, vsst = VSST, plac = PLAC)
     p_rheos = np.zeros(len(pelec))
     v_train_batt = []
     v_train_batt.append(vsst)
-    ebatt0 = ebatt_max*3/4 # comment tu as choisi ca ? énoncé ?
+    ebatt0 = ebatt_max*4/4 # comment tu as choisi ca ? énoncé ?
     ebatt[0] = ebatt0
     pbatt[0] = ebatt[0]*3600
     compt_if = 0
@@ -487,10 +487,10 @@ def NGSA2(capacite_batterie,chute_tension,nb_generation,pop_size):
     P=[] # enssemble des "parents" pour chaque generation
     R=[] # enssemble créé avec parents + enfants donc de taille 2*N
 
-    
-    fronts_pareto=[] 
-    
-    
+
+    fronts_pareto=[]
+
+
     for i in range(nb_generation):
         # front de pareto
         o1=[]
@@ -501,15 +501,15 @@ def NGSA2(capacite_batterie,chute_tension,nb_generation,pop_size):
         front=find_non_dominated_solution(o1,o2,pop_size) # c'est notre fonction d'évaluation!!!!!
         fronts_pareto.append(front)
         # selection (50% + distance d'emcombrement) distance d'encombrement à rajouter
-        
+
 
 # Appel fonction
-pop_size=1000
-capacite_batterie = np.random.uniform(50, 200, pop_size)  # Capacité de la batterie (en kWh) objectif1
-chute_tension = np.random.uniform(10, 250, pop_size)  # Chute de tension maximale (en V) objectif2  
-    
-    
-# NGSA2(capacite_batterie,chute_tension)
+POP_SIZE=1000
+Capacite_batterie = np.random.uniform(0, 200000, POP_SIZE)  # Capacité de la batterie (en kWh) objectif1
+Chute_tension = np.random.uniform(0, 1e6, POP_SIZE)  # Chute de tension maximale (en V) objectif2  
+
+
+# NGSA2(Capacite_batterie, Chute_tension, 7, POP_SIZE)
 
 
 
@@ -529,11 +529,11 @@ def mutation(individual,variable_limite, mutation_rate=0.5):
 def croisement(parent1, parent2, rate=0.5): # le rate 0.5 signifie une chance égale , 50% des cas --> croisement réalisé
     taille_genome = len(parent1)
     enfant=[]
-    for i in range(taille_genome):
-        if random.random() < rate: # génére un nb entre 0 et 1 # a mettre la , ou leurs de l'appel de la fonction à voir plus tard
-            point_de_croisement= random.randint(0,taille_genome-1)
-            enfant= parent1[:point_de_croisement] + parent2[point_de_croisement:]         
-    
+    # for i in range(taille_genome):
+    if random.random() < rate: # génére un nb entre 0 et 1 # a mettre la , ou leurs de l'appel de la fonction à voir plus tard
+        point_de_croisement= random.randint(0,taille_genome-1)
+        enfant= parent1[:point_de_croisement] + parent2[point_de_croisement:]        
+
     return enfant
 
 
