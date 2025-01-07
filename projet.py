@@ -10,11 +10,12 @@ from help_function import *
 
 #%% Création et conversion des données
 NB_SIMU= 1000
+NB_SIMU= 1000
 VLAC = 750 #Volts
 VSST = 790 #Volts
 RSST = 33*1e-3 #mOhm
-RHOLAC = 131e-6 # Ohm/m
-RHORAIL = 18e-6 # Ohm/m
+RHOLAC = 95e-6#131e-6 # Ohm/m
+RHORAIL = 10e-6#18e-6 # Ohm/m
 
 Times = []
 X = []
@@ -241,7 +242,7 @@ def gestion_batterie(pelec,ebatt_max,seuil, req = Req, vsst = VSST, plac = PLAC)
     p_rheos = np.zeros(len(pelec))
     v_train_batt = []
     v_train_batt.append(vsst)
-    ebatt0 = ebatt_max*3/4 # comment tu as choisi ca ? énoncé ?
+    ebatt0 = ebatt_max*4/4 # comment tu as choisi ca ? énoncé ?
     ebatt[0] = ebatt0
     pbatt[0] = ebatt[0]*3600
     compt_if = 0
@@ -283,7 +284,6 @@ def gestion_batterie(pelec,ebatt_max,seuil, req = Req, vsst = VSST, plac = PLAC)
     # print(v_train_batt)
         # print(VtrainBatt[i])
     # print(f'if {compt_if}, elif {compt_elif}, else {compt_else}, {np.min(v_train_batt)}')
-    
     return v_train_batt,ebatt,pbatt
 
 Pelec=remplissage_p_elec(Pm)
@@ -294,12 +294,12 @@ Pelec=remplissage_p_elec(Pm)
 
 
 # Affichage des solutions
-# trace(Times, EBatt, "Temps[s]", "Energie de la batterie",
-#        "Energie de la batterie en fonction du temps")
-# trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
-# trace(Times, PBatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps")
-# trace(Times, VTrainBatt, "Temps[s]", "Vtrain",
-#         "Vtrain avec batterie en fonction du temps") #, [0, 140]
+trace(Times, EBatt, "Temps[s]", "Energie de la batterie",
+       "Energie de la batterie en fonction du temps")
+trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
+trace(Times, PBatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps")
+trace(Times, VTrainBatt, "Temps[s]", "Vtrain",
+        "Vtrain avec batterie en fonction du temps") #, [0, 140]
 
 
 #%% Dimmensionnement du système de stockage
@@ -372,10 +372,10 @@ def monte_carlo(nbre_simulations,capacite_batterie_random,seuil_random, pelec, v
     """
     dv_max =[]
     for i in range(nbre_simulations):
-        pelec = remplissage_p_elec(Pm)
+        pelecc = remplissage_p_elec(Pm)
         placc = vlac**2/(rlac1+rlac2)
-        vtrainbatt, _, _ = gestion_batterie(pelec, capacite_batterie_random[i], seuil_random[i], plac = placc)
-        dv_max.append(vsst - np.min(vtrainbatt))
+        vtrainbatt, _, _ = gestion_batterie(pelecc, capacite_batterie_random[i], seuil_random[i], plac = placc)
+        dv_max.append(vsst - min(vtrainbatt))
     return dv_max
 
 # Paramètres à optimiser sont le cout et la chute de tension dv max -->
@@ -386,27 +386,33 @@ def monte_carlo(nbre_simulations,capacite_batterie_random,seuil_random, pelec, v
 
 # Capacité de la batterie (en kWh) objectif1
 Capacite_batterie_random=  np.random.uniform(0, 200000, NB_SIMU)
+Capacite_batterie_random=  np.random.uniform(0, 200000, NB_SIMU)
 
 # Chute de tension maximale (en MW) objectif2
-Seuil_random = np.random.uniform(0, 1000000, NB_SIMU)
+Seuil_random = np.random.uniform(0, 1e6, NB_SIMU)
 
 
-dV_max =[]
-for i in range(NB_SIMU):
-    pelec = remplissage_p_elec(Pm)
-    placc = VLAC**2/(RLAC1+RLAC2)
-    vtrainbatt, ebattt, pbattt = gestion_batterie(pelec, Capacite_batterie_random[i], Seuil_random[i], plac = placc)
-    dV_max.append(VSST - np.min(vtrainbatt))
+# dV_max =[]
+# vtrainbatt=np.zeros(len(Pelec))
+# for i in range(NB_SIMU):
+#     pelecc = remplissage_p_elec(Pm)
+#     placc = VLAC**2/(RLAC1+RLAC2)
+#     vtrainbatt=np.zeros(len(Pelec))
+#     vtrainbatt, ebattt, pbattt = gestion_batterie(pelecc, Capacite_batterie_random[i], Seuil_random[i], plac = placc)
+#     print(vtrainbatt)
+#     dV_max.append(VSST - np.min(vtrainbatt))
 
-# dV_max=monte_carlo(NB_SIMU,Capacite_batterie_random,Seuil_random,Pelec)
+dV_max=monte_carlo(NB_SIMU,Capacite_batterie_random,Seuil_random,Pelec)
 Solutions_non_dominees=find_non_dominated_solution(Capacite_batterie_random ,dV_max,NB_SIMU)
 
-# print(Capacite_batterie_random)
 
 # Affichage des solutions
 plt.subplot(211)
 plt.scatter(Capacite_batterie_random, Seuil_random, color = 'skyblue')
 # plt.scatter(capacite_correcte,seuil_correcte,color='red')
+for ii, sol in enumerate(Solutions_non_dominees):
+    plt.scatter(Capacite_batterie_random[sol],
+                Seuil_random[sol], color='red')
 plt.xlabel('Capacité en énergie de la batterie (kWh)')
 plt.ylabel('P seuil (MW)')
 plt.title('Espace des solutions / de recherche')
@@ -418,7 +424,7 @@ plt.subplot(212)
 plt.scatter(Capacite_batterie_random, dV_max, color = 'skyblue')
 for ii, sol in enumerate(Solutions_non_dominees):
     plt.scatter(Capacite_batterie_random[sol],
-                dV_max[sol], color='red', label='Solutions non dominées')
+                dV_max[sol], color='red')
 plt.xlabel('Capacité en énergie de la batterie (kWh)')
 plt.ylabel('dV max (V)')
 plt.title('Espace des objectifs')
@@ -434,9 +440,9 @@ joulou = np.random.randint(0, len(Capacite_batterie_random), 1)
 EbattMax = Capacite_batterie_random[joulou[0]]
 Seuil = Seuil_random[joulou] #np.random.randint(0, len(Seuil_random), 1)
 
-pelec = remplissage_p_elec(Pm)
+pelecc = remplissage_p_elec(Pm)
 placc = VLAC**2/(RLAC1+RLAC2)
-VTrainBatt,EBatt,PBatt=gestion_batterie(pelec,EbattMax,Seuil, plac = placc)
+VTrainBatt,EBatt,PBatt=gestion_batterie(pelecc,EbattMax,Seuil, plac = placc)
 
 # trace(Times, EBatt, "Temps[s]", "Energie de la batterie", "Energie de la batterie en fonction du temps")
 # trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
@@ -482,10 +488,10 @@ def NGSA2(capacite_batterie,chute_tension,nb_generation,pop_size):
     P=[] # enssemble des "parents" pour chaque generation
     R=[] # enssemble créé avec parents + enfants donc de taille 2*N
 
-    
-    fronts_pareto=[] 
-    
-    
+
+    fronts_pareto=[]
+
+
     for i in range(nb_generation):
         # front de pareto
         o1=[]
@@ -496,15 +502,15 @@ def NGSA2(capacite_batterie,chute_tension,nb_generation,pop_size):
         front=find_non_dominated_solution(o1,o2,pop_size) # c'est notre fonction d'évaluation!!!!!
         fronts_pareto.append(front)
         # selection (50% + distance d'emcombrement) distance d'encombrement à rajouter
-        
+
 
 # Appel fonction
-pop_size=1000
-capacite_batterie = np.random.uniform(50, 200, pop_size)  # Capacité de la batterie (en kWh) objectif1
-chute_tension = np.random.uniform(10, 250, pop_size)  # Chute de tension maximale (en V) objectif2  
-    
-    
-# NGSA2(capacite_batterie,chute_tension)
+POP_SIZE=1000
+Capacite_batterie = np.random.uniform(0, 200000, POP_SIZE)  # Capacité de la batterie (en kWh) objectif1
+Chute_tension = np.random.uniform(0, 1e6, POP_SIZE)  # Chute de tension maximale (en V) objectif2  
+
+
+# NGSA2(Capacite_batterie, Chute_tension, 7, POP_SIZE)
 
 
 
@@ -524,11 +530,11 @@ def mutation(individual,variable_limite, mutation_rate=0.5):
 def croisement(parent1, parent2, rate=0.5): # le rate 0.5 signifie une chance égale , 50% des cas --> croisement réalisé
     taille_genome = len(parent1)
     enfant=[]
-    for i in range(taille_genome):
-        if random.random() < rate: # génére un nb entre 0 et 1 # a mettre la , ou leurs de l'appel de la fonction à voir plus tard
-            point_de_croisement= random.randint(0,taille_genome-1)
-            enfant= parent1[:point_de_croisement] + parent2[point_de_croisement:]         
-    
+    # for i in range(taille_genome):
+    if random.random() < rate: # génére un nb entre 0 et 1 # a mettre la , ou leurs de l'appel de la fonction à voir plus tard
+        point_de_croisement= random.randint(0,taille_genome-1)
+        enfant= parent1[:point_de_croisement] + parent2[point_de_croisement:]        
+
     return enfant
 
 
