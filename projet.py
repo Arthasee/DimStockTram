@@ -13,8 +13,8 @@ NB_SIMU= 1000
 VLAC = 750 #Volts
 VSST = 790 #Volts
 RSST = 33*1e-3 #mOhm
-RHOLAC = 131e-6 # Ohm/m
-RHORAIL = 18e-6 # Ohm/m
+RHOLAC = 95e-6#131e-6 # Ohm/m
+RHORAIL = 10e-6#18e-6 # Ohm/m
 
 Times = []
 X = []
