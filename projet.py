@@ -513,11 +513,34 @@ Chute_tension = np.random.uniform(0, 1e6, POP_SIZE)  # Chute de tension maximale
 
 
 
-# Fonctions qu'ont a besoin pour réaliser l'algorithme génétique
+# Fonctions qu'on a besoin pour réaliser l'algorithme génétique
 
-def get_code():
-    # on a deux variables de décision ? 
-    return 1
+def rang(capacite_batterie, chute_tension, dv_max):
+    Cap_batt = []
+    Cap_batt.append(capacite_batterie.copy())
+    Chu_tension = []
+    Chu_tension.append(chute_tension.copy())
+    dv = []
+    dv.append(dv_max.copy())
+    rang_list = []
+    i = 0
+    
+    while Cap_batt[-1].size > 0:
+        
+        rang_list.append(find_non_dominated_solution(Cap_batt[i], dv[i],len(Cap_batt)))
+        Cap_batt.append(np.delete(Cap_batt, rang_list[i]))
+        Chu_tension.append(np.delete(Chu_tension, rang_list[i]))
+        dv.append(np.delete(dv, rang_list[i]))
+        i += 1
+    
+    print(rang_list)
+    
+    return rang_list, Cap_batt, Chu_tension, dv
+
+
+rang_test, Test_Capacite, _, _ =rang(Capacite_batterie_random, Seuil_random, dV_max)
+print(rang_test)
+# print(Test_Capacite)
 
 def mutation(individual,variable_limite, mutation_rate=0.5): 
     for i in range(len(individual)):
