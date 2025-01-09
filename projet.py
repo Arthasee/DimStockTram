@@ -507,22 +507,20 @@ def NGSA2(nb_generation,pop_size):
         
         best_list= selection(rang_li,cap_li,seuil_li,pop_size)
         nb=len(best_list[0])
-        nombre_enfant_souhaite=int(nb/2) # donc moitie d'enfant creer par croisement, # possible de modifier 
+        nombre_enfant_souhaite=int(nb/2) # donc moitie d'enfant creer par croisement, # possible de modifier
         new_enfant_croise=[]
         for i in range(0, nombre_enfant_souhaite):
             i_parent1=int(np.random.randint(0,len(best_list)))
             i_parent2=int(np.random.randint(0,len(best_list)))
             
             new_enfant_croise= croisement(best_list[i_parent1],best_list[i_parent2],nombre_enfant_souhaite)
-          
         nombre_mutation_souhaite=int(nb/2) # possible de modifier
         list_a_muter = choix(best_list, nombre_mutation_souhaite)
-        print(len(list_a_muter))
         # idx = np.random.randint(0, len(best_list[0]), size = np.array((1,nombre_mutation_souhaite)))
         # list_a_muter=np.random.choice(best_list, size=nombre_mutation_souhaite, replace=False)
         enfants_mute=mutation(list_a_muter,mutation_rate)
-        
-        nouvelle_gen=best_list+new_enfant_croise+enfants_mute
+        print(len(enfants_mute))
+        nouvelle_gen=[np.append(np.append(best_list[0],new_enfant_croise),enfants_mute[0]),np.append(np.append(best_list[1],new_enfant_croise[1]),enfants_mute[1])]
         
         population=copy.deepcopy(nouvelle_gen)
      
@@ -569,10 +567,10 @@ def mutation(population, mutation_rate):
     population_mutee=[]
     # pop_ret
     for pop in population:
-        if random.random() < mu_rate1: # pour le sueil
+        if np.random.random() > mu_rate1: # pour le sueil
             pop[0] = np.random.uniform(0, 1e6) # mutations aleatoire 
             
-        if random.random()<mu_rate2: # pour la capacite
+        if np.random.random()<mu_rate2: # pour la capacite
             pop[1] = np.random.uniform(0, 200000) # mutations aleatoire 
             
         population_mutee.append(pop)
@@ -583,7 +581,7 @@ def mutation(population, mutation_rate):
 def croisement(parent1, parent2, nombre_croisement): # le rate 0.5 signifie une chance égale , 50% des cas --> croisement réalisé
     
     
-    new_individus=[] # a ajouter dans la nouvelle population apres l'appel des fonctions
+    new_individus=[[],[]] # a ajouter dans la nouvelle population apres l'appel des fonctions
     for i in range(0,nombre_croisement):
         # les parents 1 et 2 sont choisi aléatoirement dans la fonction principale
         new=[]
@@ -599,7 +597,8 @@ def croisement(parent1, parent2, nombre_croisement): # le rate 0.5 signifie une 
         if indice_capacite==3:
             new.append(parent2[0])
 
-        new_individus.append(new)
+        new_individus[0].append(new[0])
+        new_individus[1].append(new[1])
       
     return new_individus
 
