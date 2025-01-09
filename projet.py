@@ -527,7 +527,6 @@ def NGSA2(nb_generation,pop_size):
 
 
 
-
 # Fonctions qu'on a besoin pour réaliser l'algorithme génétique
 def rang(capacite_batterie, chute_tension, dv_max):
     Cap_batt = []
@@ -617,9 +616,20 @@ def selection(rang_l, cap_l, seuil_l, pop_size, distances = 1):
          
     return [selected_cap, selected_seuil]
 
+
 #test:  état selection FONCTIONNE
 # selectionne_test=selection([[1,2,3,4],[5,4,9,10]],0,10)
 # print(selectionne_test)
+
+
+
+
+poptest_final=NGSA2(10,100)
+print(poptest_final)
+
+
+
+
 
 
 
