@@ -497,6 +497,7 @@ def NGSA2(nb_generation,pop_size):
     for i in range(nb_generation):
         capacite_bat=[]
         chute_ten=[]
+        # print(population[0])
         # séparer la capcite et la chute de tension dans deux list distintcs pour le monte carlo et rang
         for individu in population:
             capacite_bat.append(individu[0])
@@ -517,8 +518,10 @@ def NGSA2(nb_generation,pop_size):
         nombre_mutation_souhaite=int(nb/2) # possible de modifier
         list_a_muter = choix(best_list, nombre_mutation_souhaite)
         enfants_mute=mutation(list_a_muter,mutation_rate)
-        nouvelle_gen=[np.append(np.append(best_list[0],new_enfant_croise),enfants_mute[0]),np.append(np.append(best_list[1],new_enfant_croise[1]),enfants_mute[1])]
+        nouvelle_gen=best_list+new_enfant_croise+enfants_mute
         
+        while [] in nouvelle_gen:
+            nouvelle_gen.remove([])
         population=copy.deepcopy(nouvelle_gen)
      
     return population
@@ -559,7 +562,7 @@ def rang(capacite_batterie, chute_tension, dv_max):
 def mutation(population, mutation_rate):
     mu_rate1=mutation_rate
     mu_rate2=mutation_rate
-    population_mutee=[[],[]]
+    population_mutee=[[]]
     # pop_ret
     for pop in population:
         if np.random.random() < mu_rate1+1: # pour le sueil
@@ -568,15 +571,14 @@ def mutation(population, mutation_rate):
         if np.random.random()<mu_rate2: # pour la capacite
             pop[1] = np.random.uniform(0, 200000) # mutations aleatoire
             
-        population_mutee[0].append(pop[0])
-        population_mutee[1].append(pop[1])
+        population_mutee.append(pop)
     return population_mutee
   
 
 def croisement(parent1, parent2, nombre_croisement): # le rate 0.5 signifie une chance égale , 50% des cas --> croisement réalisé
     
     
-    new_individus=[[],[]] # a ajouter dans la nouvelle population apres l'appel des fonctions
+    new_individus=[[]] # a ajouter dans la nouvelle population apres l'appel des fonctions
     for i in range(0,nombre_croisement):
         # les parents 1 et 2 sont choisi aléatoirement dans la fonction principale
         new=[]
@@ -592,8 +594,7 @@ def croisement(parent1, parent2, nombre_croisement): # le rate 0.5 signifie une 
         if indice_capacite==3:
             new.append(parent2[0])
 
-        new_individus[0].append(new[0])
-        new_individus[1].append(new[1])
+        new_individus.append(new)
       
     return new_individus
 
@@ -621,8 +622,11 @@ def selection(rang_l, cap_l, seuil_l, pop_size, distances = 1):
                 selected_seuil = selected_seuil + seuil_l[i][rng[j]]
                 reste = reste - 1
             break
+    selected = []
+    for i, sel in enumerate(selected_cap):
+        selected.append([sel,selected_seuil[i]])
          
-    return [selected_cap, selected_seuil]
+    return selected
 
 
 #test:  état selection FONCTIONNE
@@ -633,7 +637,16 @@ def selection(rang_l, cap_l, seuil_l, pop_size, distances = 1):
 
 
 poptest_final=NGSA2(10,100)
-print(poptest_final)
+
+cap_ngsa2 = []
+seuil_ngsa2 = []
+
+print(len(poptest_final))
+
+# plt.figure()
+# plt.scatter()
+# plt.show()
+
 
 
 
@@ -647,8 +660,7 @@ print(poptest_final)
 
 
 population_test = NGSA2(7, 100)
-print(population_test)
-print(len(population_test))
+print(len(population_test[-1]))
 
 
 # def voir_convergence():
