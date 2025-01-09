@@ -487,10 +487,16 @@ def NGSA2(capacite_batterie,chute_tension,nb_generation,pop_size):
     P=[] # enssemble des "parents" pour chaque generation
     # R=[] # enssemble créé avec parents + enfants donc de taille 2*N
 
+    # Appel fonction
+    POP_SIZE=100
+    Capacite_batterie = np.random.uniform(0, 200000, POP_SIZE)  # Capacité de la batterie (en kWh) objectif1
+    Chute_tension = np.random.uniform(0, 1e6, POP_SIZE)  # Chute de tension maximale (en V) objectif2  
 
-    popoulation_i=  Capacite_batterie_random=  np.random.uniform(0, 200000, NB_SIMU)
-    Seuil_random = np.random.uniform(0, 1e6, NB_SIMU)          
-    
+    pop_a=[[]]
+    for i in range(0,POP_SIZE):
+        pop_a[i][np.random.uniform(0, 200000, NB_SIMU),np.random.uniform(0, 1e6, NB_SIMU) ]
+               
+
     for i in range(nb_generation):
         # front de pareto
         o1=[]
@@ -503,10 +509,6 @@ def NGSA2(capacite_batterie,chute_tension,nb_generation,pop_size):
         # selection (50% + distance d'emcombrement) distance d'encombrement à rajouter
 
 
-# Appel fonction
-POP_SIZE=1000
-Capacite_batterie = np.random.uniform(0, 200000, POP_SIZE)  # Capacité de la batterie (en kWh) objectif1
-Chute_tension = np.random.uniform(0, 1e6, POP_SIZE)  # Chute de tension maximale (en V) objectif2  
 
 
 # NGSA2(Capacite_batterie, Chute_tension, 7, POP_SIZE)
@@ -515,26 +517,46 @@ Chute_tension = np.random.uniform(0, 1e6, POP_SIZE)  # Chute de tension maximale
 
 # Fonctions qu'ont a besoin pour réaliser l'algorithme génétique
 
-def get_code():
-    # on a deux variables de décision ? 
-    return 1
 
-def mutation(individual,variable_limite, mutation_rate=0.5): 
-    for i in range(len(individual)):
-        if random.random() < mutation_rate:
-            individual[i] = random.uniform(variable_limite[0],variable_limite[1])  # changement s'opère entre les limites, mutations aleatoire 
-    return individual
+
+def mutation(population, mutation_rate=0.5): 
+    mu_rate1=mutation_rate
+    mu_rate2=mutation_rate
+    population_mutee=[]
+    for pop in population:
+        if random.random() < mu_rate1: # pour le sueil
+            pop[0] = np.random.uniform(0, 1e6) # mutations aleatoire 
+            
+        if random.random()<mu_rate2: # pour la capacite
+            pop[1] = np.random.uniform(0, 200000) # mutations aleatoire 
+            
+        population_mutee.append(pop)
+
+    return pop
   
 
-def croisement(parent1, parent2, rate=0.5): # le rate 0.5 signifie une chance égale , 50% des cas --> croisement réalisé
-    taille_genome = len(parent1)
-    enfant=[]
-    # for i in range(taille_genome):
-    if random.random() < rate: # génére un nb entre 0 et 1 # a mettre la , ou leurs de l'appel de la fonction à voir plus tard
-        point_de_croisement= random.randint(0,taille_genome-1)
-        enfant= parent1[:point_de_croisement] + parent2[point_de_croisement:]        
+def croisement(parent1, parent2, nombre_croisement): # le rate 0.5 signifie une chance égale , 50% des cas --> croisement réalisé
+    
+    
+    new_individus=[] # a ajouter dans la nouvelle population apres l'appel des fonctions
+    for i in range(0,nombre_croisement):
+        # les parents 1 et 2 sont choisi aléatoirement dans la fonction principale
+        new=[]
+        indice_seuil= np.random.randint(0, 2) # 0 ou 1  parent 1 ou parent2
+        indice_capacite= np.random.randint(2, 4) # 0 ou 1
+        
+        if indice_seuil==0:
+            new.append(parent1[0])
+        elif indice_seuil==1:
+            new.append(parent2[0])
+        if indice_capacite==2:
+            new.append(parent1[0])
+        if indice_capacite==3:
+            new.append(parent2[0])
 
-    return enfant
+        new_individus.append(new)
+      
+    return new_individus
 
 
 
