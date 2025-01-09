@@ -581,21 +581,25 @@ def croisement(parent1, parent2, nombre_croisement): # le rate 0.5 signifie une 
 
 
 
-def selection(rang_l, cap_l, seuil_l, distances = 1,pop_size):
+def selection(rang_l, cap_l, seuil_l, pop_size, distances = 1):
     # il faut selectionner 50% des meilleurs d'après le slide du projet
-    selected=[]
+    selected_cap=[]
+    selected_seuil = []
     N=int(pop_size*0.5)  # nombre_a_selectionne
-    for i in range(0,len(rang_l)):
-        if len(selected) + len(rang_l[i]) < N:
-            selected.extend([i])
+    for i, rng in enumerate(rang_l):
+        if len(selected_cap) + len(rng) < N:
+            selected_cap = selected_cap + cap_l[i][rang_l[i]]
+            selected_seuil = selected_seuil + seuil_l[i][rang_l[i]]
         else:
-            reste= N-len(selected) 
-            front= fronts_pareto[i]
-            if reste>0:
-                selected.extend(front[:reste])
+            reste= N-len(selected_cap)
+            j = 0
+            while reste>0:
+                selected_cap = selected_cap + cap_l[i][rang_l[i][j]]
+                selected_seuil = selected_seuil + seuil_l[i][rang_l[i][j]]
+                reste = N - len(selected_cap)
             break
          
-    return selected
+    return [selected_cap, selected_seuil]
 
 #test:  état selection FONCTIONNE
 # selectionne_test=selection([[1,2,3,4],[5,4,9,10]],0,10)
