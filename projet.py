@@ -523,7 +523,6 @@ def rang(capacite_batterie, chute_tension, dv_max):
     dv = []
     dv.append(dv_max.copy())
     rang_list = []
-    i = 0
 
     while Cap_batt[-1].size > 0:
         test = find_non_dominated_solution(Cap_batt[-1], dv[-1],len(Cap_batt[-1]))
@@ -532,7 +531,6 @@ def rang(capacite_batterie, chute_tension, dv_max):
         Cap_batt.append(np.delete(Cap_batt[-1], rang_list[-1]))
         Chu_tension.append(np.delete(Chu_tension[-1], rang_list[-1]))
         dv.append(np.delete(dv[-1], rang_list[-1]))
-        i += 1
 
     print(rang_list)
 
