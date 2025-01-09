@@ -586,8 +586,8 @@ def selection(rang_l, cap_l, seuil_l, distances = 1,pop_size):
     selected=[]
     N=int(pop_size*0.5)  # nombre_a_selectionne
     for i in range(0,len(rang_l)):
-        if len(selected) + len(fronts_pareto[i]) < N:
-            selected.extend(fronts_pareto[i])
+        if len(selected) + len(rang_l[i]) < N:
+            selected.extend([i])
         else:
             reste= N-len(selected) 
             front= fronts_pareto[i]
