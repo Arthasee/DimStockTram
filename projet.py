@@ -489,7 +489,7 @@ def NGSA2(capacite_batterie,chute_tension,nb_generation,pop_size):
 
     capacite_bat = capacite_batterie.copy()
     chute_ten = chute_tension.copy()
-    popoulation_i=  pop_size       
+    population_i=  pop_size       
     
     for i in range(nb_generation):
         # front de pareto
@@ -497,7 +497,7 @@ def NGSA2(capacite_batterie,chute_tension,nb_generation,pop_size):
         rang_i, capacite_i, seuil_i, dv_i = rang(capacite_bat, chute_ten, dv)
         o1=[]
         o2=[]
-        for i in population:
+        for i in population_i:
             o1.append(i[0])
             o2.append(i[1])
         front=find_non_dominated_solution(o1,o2,pop_size) # c'est notre fonction d'évaluation!!!!!
@@ -562,11 +562,11 @@ def croisement(parent1, parent2, rate=0.5): # le rate 0.5 signifie une chance é
 
 
 
-def selection(fronts_pareto,distances,pop_size):
+def selection(rang_l, cap_l, seuil_l, distances = 1,pop_size):
     # il faut selectionner 50% des meilleurs d'après le slide du projet
     selected=[]
-    N=int(pop_size*0.5)  # nomrbe_a_selectionne
-    for i in range(0,len(fronts_pareto)):
+    N=int(pop_size*0.5)  # nombre_a_selectionne
+    for i in range(0,len(rang_l)):
         if len(selected) + len(fronts_pareto[i]) < N:
             selected.extend(fronts_pareto[i])
         else:
