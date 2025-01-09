@@ -402,38 +402,38 @@ Seuil_random = np.random.uniform(0, 1e6, NB_SIMU)
 #     print(vtrainbatt)
 #     dV_max.append(VSST - np.min(vtrainbatt))
 
-dV_max=monte_carlo(NB_SIMU,Capacite_batterie_random,Seuil_random,Pelec)
-Solutions_non_dominees=find_non_dominated_solution(Capacite_batterie_random ,dV_max,NB_SIMU)
+# dV_max=monte_carlo(NB_SIMU,Capacite_batterie_random,Seuil_random,Pelec)
+# Solutions_non_dominees=find_non_dominated_solution(Capacite_batterie_random ,dV_max,NB_SIMU)
 
 
 # Affichage des solutions
-plt.subplot(211)
-plt.scatter(Capacite_batterie_random, Seuil_random, color = 'skyblue')
-# plt.scatter(capacite_correcte,seuil_correcte,color='red')
-for ii, sol in enumerate(Solutions_non_dominees):
-    plt.scatter(Capacite_batterie_random[sol],
-                Seuil_random[sol], color='red')
-plt.xlabel('Capacité en énergie de la batterie (kWh)')
-plt.ylabel('P seuil (MW)')
-plt.title('Espace des solutions / de recherche')
-plt.grid()
-plt.legend()
+# plt.subplot(211)
+# plt.scatter(Capacite_batterie_random, Seuil_random, color = 'skyblue')
+# # plt.scatter(capacite_correcte,seuil_correcte,color='red')
+# for ii, sol in enumerate(Solutions_non_dominees):
+#     plt.scatter(Capacite_batterie_random[sol],
+#                 Seuil_random[sol], color='red')
+# plt.xlabel('Capacité en énergie de la batterie (kWh)')
+# plt.ylabel('P seuil (MW)')
+# plt.title('Espace des solutions / de recherche')
+# plt.grid()
+# plt.legend()
 
 
-plt.subplot(212)
-plt.scatter(Capacite_batterie_random, dV_max, color = 'skyblue')
-for ii, sol in enumerate(Solutions_non_dominees):
-    plt.scatter(Capacite_batterie_random[sol],
-                dV_max[sol], color='red')
-plt.xlabel('Capacité en énergie de la batterie (kWh)')
-plt.ylabel('dV max (V)')
-plt.title('Espace des objectifs')
-plt.grid()
-plt.legend()
+# plt.subplot(212)
+# plt.scatter(Capacite_batterie_random, dV_max, color = 'skyblue')
+# for ii, sol in enumerate(Solutions_non_dominees):
+#     plt.scatter(Capacite_batterie_random[sol],
+#                 dV_max[sol], color='red')
+# plt.xlabel('Capacité en énergie de la batterie (kWh)')
+# plt.ylabel('dV max (V)')
+# plt.title('Espace des objectifs')
+# plt.grid()
+# plt.legend()
 
 
-plt.tight_layout()
-plt.show()
+# plt.tight_layout()
+# plt.show()
 
 joulou = np.random.randint(0, len(Capacite_batterie_random), 1)
 
@@ -506,28 +506,41 @@ def NGSA2(nb_generation,pop_size):
         rang_li, cap_li, seuil_li, dv_li = rang(capacite_bat, chute_ten, dv)
         
         best_list= selection(rang_li,cap_li,seuil_li,pop_size)
-        nb=len(best_list)
-        nombre_enfant_souhaite=nb/2 # donc moitie d'enfant creer par croisement, # possible de modifier 
+        nb=len(best_list[0])
+        nombre_enfant_souhaite=int(nb/2) # donc moitie d'enfant creer par croisement, # possible de modifier 
         new_enfant_croise=[]
         for i in range(0, nombre_enfant_souhaite):
-            i_parent1=np.random.randint(0,len(best_list))
-            i_parent2=np.random.randint(0,len(best_list))
+            i_parent1=int(np.random.randint(0,len(best_list)))
+            i_parent2=int(np.random.randint(0,len(best_list)))
             
             new_enfant_croise= croisement(best_list[i_parent1],best_list[i_parent2],nombre_enfant_souhaite)
           
-        nombre_mutation_souhaite=nb/2 # possible de modifier 
-        list_a_muter=np.random.choice(best_list, size=nombre_mutation_souhaite, replace=False)
+        nombre_mutation_souhaite=int(nb/2) # possible de modifier
+        list_a_muter = choix(best_list, nombre_mutation_souhaite)
+        print(len(list_a_muter))
+        # idx = np.random.randint(0, len(best_list[0]), size = np.array((1,nombre_mutation_souhaite)))
+        # list_a_muter=np.random.choice(best_list, size=nombre_mutation_souhaite, replace=False)
         enfants_mute=mutation(list_a_muter,mutation_rate)
         
         nouvelle_gen=best_list+new_enfant_croise+enfants_mute
         
-        population=nouvelle_gen.deepcopy()
+        population=copy.deepcopy(nouvelle_gen)
      
     return population
 
 
 
 # Fonctions qu'on a besoin pour réaliser l'algorithme génétique
+
+def choix(liste_a_choix, nombre_mutation):
+    id = np.random.uniform(0, len(liste_a_choix), nombre_mutation)
+    liste_a_muter = []
+    for i, choixe in enumerate(liste_a_choix):
+        if i in id:
+            liste_a_muter.append([choixe[0],choixe[1]])
+            # liste_a_muter[1].append(choixe[1])
+    return liste_a_muter
+
 def rang(capacite_batterie, chute_tension, dv_max):
     Cap_batt = []
     Cap_batt.append(capacite_batterie.copy())
@@ -537,27 +550,23 @@ def rang(capacite_batterie, chute_tension, dv_max):
     dv.append(dv_max.copy())
     rang_list = []
 
-    while Cap_batt[-1].size > 0:
+    while len(Cap_batt[-1]) > 0:
         test = find_non_dominated_solution(Cap_batt[-1], dv[-1],len(Cap_batt[-1]))
         print(test)
         rang_list.append(test)
-        Cap_batt.append(np.delete(Cap_batt[-1], rang_list[-1]))
-        Chu_tension.append(np.delete(Chu_tension[-1], rang_list[-1]))
-        dv.append(np.delete(dv[-1], rang_list[-1]))
-
-    print(rang_list)
+        Cap_batt.append(np.array(np.delete(Cap_batt[-1], rang_list[-1])))
+        Chu_tension.append(np.array(np.delete(Chu_tension[-1], rang_list[-1])))
+        dv.append(np.array(np.delete(dv[-1], rang_list[-1])))
 
     return rang_list, Cap_batt, Chu_tension, dv
 
-
-rang_test, Test_Capacite, _, _ =rang(Capacite_batterie_random, Seuil_random, dV_max)
-print(Test_Capacite[0][rang_test[0]])
-
+# rang_test, Test_Capacite, _, _ =rang(Capacite_batterie_random, Seuil_random, dV_max)
 
 def mutation(population, mutation_rate): 
     mu_rate1=mutation_rate
     mu_rate2=mutation_rate
     population_mutee=[]
+    # pop_ret
     for pop in population:
         if random.random() < mu_rate1: # pour le sueil
             pop[0] = np.random.uniform(0, 1e6) # mutations aleatoire 
@@ -567,7 +576,7 @@ def mutation(population, mutation_rate):
             
         population_mutee.append(pop)
 
-    return pop
+    return population_mutee
   
 
 def croisement(parent1, parent2, nombre_croisement): # le rate 0.5 signifie une chance égale , 50% des cas --> croisement réalisé
@@ -600,18 +609,22 @@ def selection(rang_l, cap_l, seuil_l, pop_size, distances = 1):
     # il faut selectionner 50% des meilleurs d'après le slide du projet
     selected_cap=[]
     selected_seuil = []
+    for i, cp in enumerate(cap_l):
+        cp = np.array(cp)
+        seuil_l[i] = np.array(seuil_l[i])
     N=int(pop_size*0.5)  # nombre_a_selectionne
     for i, rng in enumerate(rang_l):
         if len(selected_cap) + len(rng) < N:
-            selected_cap = selected_cap + cap_l[i][rang_l[i]]
-            selected_seuil = selected_seuil + seuil_l[i][rang_l[i]]
+            for r in rng:
+                selected_cap = selected_cap + [cap_l[i][r]]
+                selected_seuil = selected_seuil + [seuil_l[i][r]]
         else:
             reste= N-len(selected_cap)
             j = 0
             while reste>0:
-                selected_cap = selected_cap + cap_l[i][rang_l[i][j]]
-                selected_seuil = selected_seuil + seuil_l[i][rang_l[i][j]]
-                reste = N - len(selected_cap)
+                selected_cap = selected_cap + cap_l[i][rng[j]]
+                selected_seuil = selected_seuil + seuil_l[i][rng[j]]
+                reste = reste - 1
             break
          
     return [selected_cap, selected_seuil]
@@ -638,7 +651,9 @@ print(poptest_final)
 #     return 1
 
 
-
+population_test = NGSA2(7, 100)
+print(population_test)
+print(len(population_test))
 
 
 # def voir_convergence():
