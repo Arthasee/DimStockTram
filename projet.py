@@ -516,10 +516,7 @@ def NGSA2(nb_generation,pop_size):
             new_enfant_croise= croisement(best_list[i_parent1],best_list[i_parent2],nombre_enfant_souhaite)
         nombre_mutation_souhaite=int(nb/2) # possible de modifier
         list_a_muter = choix(best_list, nombre_mutation_souhaite)
-        # idx = np.random.randint(0, len(best_list[0]), size = np.array((1,nombre_mutation_souhaite)))
-        # list_a_muter=np.random.choice(best_list, size=nombre_mutation_souhaite, replace=False)
         enfants_mute=mutation(list_a_muter,mutation_rate)
-        print(len(enfants_mute))
         nouvelle_gen=[np.append(np.append(best_list[0],new_enfant_croise),enfants_mute[0]),np.append(np.append(best_list[1],new_enfant_croise[1]),enfants_mute[1])]
         
         population=copy.deepcopy(nouvelle_gen)
@@ -550,7 +547,6 @@ def rang(capacite_batterie, chute_tension, dv_max):
 
     while len(Cap_batt[-1]) > 0:
         test = find_non_dominated_solution(Cap_batt[-1], dv[-1],len(Cap_batt[-1]))
-        print(test)
         rang_list.append(test)
         Cap_batt.append(np.array(np.delete(Cap_batt[-1], rang_list[-1])))
         Chu_tension.append(np.array(np.delete(Chu_tension[-1], rang_list[-1])))
@@ -560,20 +556,20 @@ def rang(capacite_batterie, chute_tension, dv_max):
 
 # rang_test, Test_Capacite, _, _ =rang(Capacite_batterie_random, Seuil_random, dV_max)
 
-def mutation(population, mutation_rate): 
+def mutation(population, mutation_rate):
     mu_rate1=mutation_rate
     mu_rate2=mutation_rate
-    population_mutee=[]
+    population_mutee=[[],[]]
     # pop_ret
     for pop in population:
-        if np.random.random() > mu_rate1: # pour le sueil
-            pop[0] = np.random.uniform(0, 1e6) # mutations aleatoire 
+        if np.random.random() < mu_rate1+1: # pour le sueil
+            pop[0] = np.random.uniform(0, 1e6) # mutations aleatoire
             
         if np.random.random()<mu_rate2: # pour la capacite
-            pop[1] = np.random.uniform(0, 200000) # mutations aleatoire 
+            pop[1] = np.random.uniform(0, 200000) # mutations aleatoire
             
-        population_mutee.append(pop)
-
+        population_mutee[0].append(pop[0])
+        population_mutee[1].append(pop[1])
     return population_mutee
   
 
