@@ -386,7 +386,7 @@ def monte_carlo(nbre_simulations,capacite_batterie_random,seuil_random, pelec, v
 
 # Capacité de la batterie (en kWh) objectif1
 Capacite_batterie_random=  np.random.uniform(0, 200000, NB_SIMU)
-Capacite_batterie_random=  np.random.uniform(0, 200000, NB_SIMU)
+# Capacite_batterie_random=  np.random.uniform(0, 200000, NB_SIMU)
 
 # Chute de tension maximale (en MW) objectif2
 Seuil_random = np.random.uniform(0, 1e6, NB_SIMU)
@@ -481,38 +481,54 @@ Explorer les zones qui paraissent prometteuses sans être bloquées
 par un optimum local."""
 
 
-def NGSA2(capacite_batterie,chute_tension,nb_generation,pop_size):
+def NGSA2(nb_generation,pop_size):
     # Initialisation
-    Q=[] # enssemble des "enfants" pour chaque generation
-    P=[] # enssemble des "parents" pour chaque generation
-    # R=[] # enssemble créé avec parents + enfants donc de taille 2*N
+  
 
-    capacite_bat = capacite_batterie.copy()
-    chute_ten = chute_tension.copy()
-    population_i=  pop_size       
+    mutation_rate=0.5
+    
+    list_capacite_batterie=  np.random.uniform(0, 200000, pop_size)
+    list_chute_tension=  np.random.uniform(0, 1e6, pop_size)
+    
+    population=[]
+    for i in range(0,pop_size):
+        population.append([list_capacite_batterie[i],list_chute_tension[i]])
     
     for i in range(nb_generation):
-        # front de pareto
-        dv = monte_carlo(len(capacite_bat), capacite_bat, chute_ten, Pelec)
-        rang_i, capacite_i, seuil_i, dv_i = rang(capacite_bat, chute_ten, dv)
-        o1=[]
-        o2=[]
-        for i in population_i:
-            o1.append(i[0])
-            o2.append(i[1])
-        front=find_non_dominated_solution(o1,o2,pop_size) # c'est notre fonction d'évaluation!!!!!
-        fronts_pareto.append(front)
-        # selection (50% + distance d'emcombrement) distance d'encombrement à rajouter
+        capacite_bat=[]
+        chute_ten=[]
+        # séparer la capcite et la chute de tension dans deux list distintcs pour le monte carlo et rang
+        for individu in population:
+            capacite_bat.append(individu[0])
+            chute_ten.append(individu[1])
+        
+        dv = monte_carlo(len(capacite_bat), capacite_bat, chute_ten, Pelec) 
+        rang_li, cap_li, seuil_li, dv_li = rang(capacite_bat, chute_ten, dv)
+        
+        best_list= selection(rang_li,cap_li,seuil_li,pop_size)
+        nb=len(best_list)
+        nombre_enfant_souhaite=nb/2 # donc moitie d'enfant creer par croisement, # possible de modifier 
+        new_enfant_croise=[]
+        for i in range(0, nombre_enfant_souhaite):
+            i_parent1=np.random.randint(0,len(best_list))
+            i_parent2=np.random.randint(0,len(best_list))
+            
+            new_enfant_croise= croisement(best_list[i_parent1],best_list[i_parent2],nombre_enfant_souhaite)
+          
+        nombre_mutation_souhaite=nb/2 # possible de modifier 
+        list_a_muter=np.random.choice(best_list, size=nombre_mutation_souhaite, replace=False)
+        enfants_mute=mutation(list_a_muter,mutation_rate)
+        
+        nouvelle_gen=best_list+new_enfant_croise+enfants_mute
+        
+        population=nouvelle_gen.deepcopy()
+     
+    return population
 
-
-
-
-# NGSA2(Capacite_batterie, Chute_tension, 7, POP_SIZE)
 
 
 
 # Fonctions qu'on a besoin pour réaliser l'algorithme génétique
-
 def rang(capacite_batterie, chute_tension, dv_max):
     Cap_batt = []
     Cap_batt.append(capacite_batterie.copy())
@@ -539,7 +555,7 @@ rang_test, Test_Capacite, _, _ =rang(Capacite_batterie_random, Seuil_random, dV_
 print(Test_Capacite[0][rang_test[0]])
 
 
-def mutation(population, mutation_rate=0.5): 
+def mutation(population, mutation_rate): 
     mu_rate1=mutation_rate
     mu_rate2=mutation_rate
     population_mutee=[]
