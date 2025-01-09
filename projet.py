@@ -294,12 +294,12 @@ Pelec=remplissage_p_elec(Pm)
 
 
 # Affichage des solutions
-trace(Times, EBatt, "Temps[s]", "Energie de la batterie",
-       "Energie de la batterie en fonction du temps")
-trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
-trace(Times, PBatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps")
-trace(Times, VTrainBatt, "Temps[s]", "Vtrain",
-        "Vtrain avec batterie en fonction du temps") #, [0, 140]
+# trace(Times, EBatt, "Temps[s]", "Energie de la batterie",
+#        "Energie de la batterie en fonction du temps")
+# trace(Times, PLAC, "Temps[s]", "PLAC", "PLAC avec batterie en fonction du temps")
+# trace(Times, PBatt, "Temps[s]", "puissance batterie", "puissance batterie en fonction du temps")
+# trace(Times, VTrainBatt, "Temps[s]", "Vtrain",
+#         "Vtrain avec batterie en fonction du temps") #, [0, 140]
 
 
 #%% Dimmensionnement du système de stockage
@@ -488,7 +488,7 @@ def NGSA2(capacite_batterie,chute_tension,nb_generation,pop_size):
     P=[] # enssemble des "parents" pour chaque generation
     R=[] # enssemble créé avec parents + enfants donc de taille 2*N
 
-
+    
     fronts_pareto=[]
 
 
@@ -562,17 +562,18 @@ def selection(fronts_pareto,distances,pop_size):
 
 
 
-def distance_encombrement(population):
+# def distance_encombrement(population):
     
-    return 1
+#     return 1
 
 
 
 
 
-def voir_convergence():
+# def voir_convergence():
     
-    return 1
+#     return 1
+
 
 
 """ Parametre à changer pour obtenir une meilleur convergence des front de paréto:
