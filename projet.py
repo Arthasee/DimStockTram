@@ -483,15 +483,14 @@ par un optimum local."""
 
 def NGSA2(capacite_batterie,chute_tension,nb_generation,pop_size):
     # Initialisation
-    population = np.column_stack((capacite_batterie, chute_tension))# poppulation individu "parent" initial généré aléatoirement taille N
     Q=[] # enssemble des "enfants" pour chaque generation
     P=[] # enssemble des "parents" pour chaque generation
-    R=[] # enssemble créé avec parents + enfants donc de taille 2*N
+    # R=[] # enssemble créé avec parents + enfants donc de taille 2*N
 
+
+    popoulation_i=  Capacite_batterie_random=  np.random.uniform(0, 200000, NB_SIMU)
+    Seuil_random = np.random.uniform(0, 1e6, NB_SIMU)          
     
-    fronts_pareto=[]
-
-
     for i in range(nb_generation):
         # front de pareto
         o1=[]
