@@ -506,7 +506,7 @@ def NGSA2(nb_generation,pop_size):
         rang_li, cap_li, seuil_li, dv_li = rang(capacite_bat, chute_ten, dv)
         
         best_list= selection(rang_li,cap_li,seuil_li,pop_size)
-        nb=len(best_list)
+        nb=len(best_list[0])
         nombre_enfant_souhaite=int(nb/2) # donc moitie d'enfant creer par croisement, # possible de modifier 
         new_enfant_croise=[]
         for i in range(0, nombre_enfant_souhaite):
@@ -515,13 +515,16 @@ def NGSA2(nb_generation,pop_size):
             
             new_enfant_croise= croisement(best_list[i_parent1],best_list[i_parent2],nombre_enfant_souhaite)
           
-        nombre_mutation_souhaite=nb/2 # possible de modifier 
-        list_a_muter=np.random.choice(best_list, size=nombre_mutation_souhaite, replace=False)
+        nombre_mutation_souhaite=int(nb/2) # possible de modifier
+        list_a_muter = choix(best_list, nombre_mutation_souhaite)
+        print(len(list_a_muter))
+        # idx = np.random.randint(0, len(best_list[0]), size = np.array((1,nombre_mutation_souhaite)))
+        # list_a_muter=np.random.choice(best_list, size=nombre_mutation_souhaite, replace=False)
         enfants_mute=mutation(list_a_muter,mutation_rate)
         
         nouvelle_gen=best_list+new_enfant_croise+enfants_mute
         
-        population=nouvelle_gen.deepcopy()
+        population=copy.deepcopy(nouvelle_gen)
      
     return population
 
@@ -529,6 +532,16 @@ def NGSA2(nb_generation,pop_size):
 
 
 # Fonctions qu'on a besoin pour réaliser l'algorithme génétique
+
+def choix(liste_a_choix, nombre_mutation):
+    id = np.random.uniform(0, len(liste_a_choix), nombre_mutation)
+    liste_a_muter = []
+    for i, choixe in enumerate(liste_a_choix):
+        if i in id:
+            liste_a_muter.append([choixe[0],choixe[1]])
+            # liste_a_muter[1].append(choixe[1])
+    return liste_a_muter
+
 def rang(capacite_batterie, chute_tension, dv_max):
     Cap_batt = []
     Cap_batt.append(capacite_batterie.copy())
@@ -548,9 +561,7 @@ def rang(capacite_batterie, chute_tension, dv_max):
 
     return rang_list, Cap_batt, Chu_tension, dv
 
-
 # rang_test, Test_Capacite, _, _ =rang(Capacite_batterie_random, Seuil_random, dV_max)
-
 
 def mutation(population, mutation_rate): 
     mu_rate1=mutation_rate
@@ -566,7 +577,7 @@ def mutation(population, mutation_rate):
             
         population_mutee.append(pop)
 
-    return pop
+    return population_mutee
   
 
 def croisement(parent1, parent2, nombre_croisement): # le rate 0.5 signifie une chance égale , 50% des cas --> croisement réalisé
@@ -632,6 +643,7 @@ def selection(rang_l, cap_l, seuil_l, pop_size, distances = 1):
 
 population_test = NGSA2(7, 100)
 print(population_test)
+print(len(population_test))
 
 
 # def voir_convergence():
