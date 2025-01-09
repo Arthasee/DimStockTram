@@ -490,9 +490,12 @@ def NGSA2(nb_generation,pop_size):
     list_capacite_batterie=  np.random.uniform(0, 200000, pop_size)
     list_chute_tension=  np.random.uniform(0, 1e6, pop_size)
     
+    liste_generation = []
     population=[]
     for i in range(0,pop_size):
         population.append([list_capacite_batterie[i],list_chute_tension[i]])
+    
+    liste_generation.append(population)
     
     for i in range(nb_generation):
         capacite_bat=[]
@@ -523,8 +526,9 @@ def NGSA2(nb_generation,pop_size):
         while [] in nouvelle_gen:
             nouvelle_gen.remove([])
         population=copy.deepcopy(nouvelle_gen)
+        liste_generation.append(population)
      
-    return population
+    return population, liste_generation
 
 
 
@@ -636,16 +640,39 @@ def selection(rang_l, cap_l, seuil_l, pop_size, distances = 1):
 
 
 
-poptest_final=NGSA2(10,100)
-
+poptest_final, generation=NGSA2(10,100)
 cap_ngsa2 = []
 seuil_ngsa2 = []
+dv_ngsa2 = []
 
-print(len(poptest_final))
+for gen in generation:
+    cap = []
+    seuil = []
+    dv = []
+    for i in range(len(gen)):
+        cap.append(gen[i][0])
+        seuil.append(gen[i][1])
+    cap_ngsa2.append(cap)
+    seuil_ngsa2.append(seuil)
+    dv_ngsa2.append(monte_carlo(len(cap),cap,seuil, Pelec))
 
-# plt.figure()
-# plt.scatter()
-# plt.show()
+# print(len(cap_ngsa2[0]))
+
+plt.figure()
+for i in range(len(cap_ngsa2)):
+    plt.scatter(cap_ngsa2[i], seuil_ngsa2[i], label = f'Génération {i}')
+plt.xlabel("Capacité")
+plt.ylabel("Seuil")
+plt.legend()
+plt.show()
+
+plt.figure()
+for i in range(len(cap_ngsa2)):
+    plt.scatter(cap_ngsa2[i], dv_ngsa2[i], label = f'Génération {i}')
+plt.xlabel("Capacité")
+plt.ylabel("Chute de Tension")
+plt.legend()
+plt.show()
 
 
 
