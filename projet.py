@@ -287,10 +287,10 @@ def gestion_batterie(pelec,ebatt_max,seuil, req = Req, vsst = VSST, plac = PLAC)
     return v_train_batt,ebatt,pbatt
 
 Pelec=remplissage_p_elec(Pm)
-# EbattMax = 18*1e3
+EbattMax = 18*1e3
 
-# Seuil = 0.5 * np.max(Pelec) # choisi par Baptiste, quel est l'unité de Pelec à discuter
-# VTrainBatt,EBatt,PBatt=gestion_batterie(Pelec,EbattMax,Seuil)
+Seuil = 0.5 * np.max(Pelec) # choisi par Baptiste, quel est l'unité de Pelec à discuter
+VTrainBatt,EBatt,PBatt=gestion_batterie(Pelec,EbattMax,Seuil)
 
 
 # Affichage des solutions
