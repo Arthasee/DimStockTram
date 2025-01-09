@@ -487,12 +487,14 @@ def NGSA2(capacite_batterie,chute_tension,nb_generation,pop_size):
     P=[] # enssemble des "parents" pour chaque generation
     # R=[] # enssemble créé avec parents + enfants donc de taille 2*N
 
-
-    popoulation_i=  Capacite_batterie_random=  np.random.uniform(0, 200000, NB_SIMU)
-    Seuil_random = np.random.uniform(0, 1e6, NB_SIMU)          
+    capacite_bat = capacite_batterie.copy()
+    chute_ten = chute_tension.copy()
+    popoulation_i=  pop_size       
     
     for i in range(nb_generation):
         # front de pareto
+        dv = monte_carlo(len(capacite_bat), capacite_bat, chute_ten, Pelec)
+        rang_i, capacite_i, seuil_i, dv_i = rang(capacite_bat, chute_ten, dv)
         o1=[]
         o2=[]
         for i in population:
