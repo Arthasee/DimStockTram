@@ -487,18 +487,14 @@ def NGSA2(capacite_batterie,chute_tension,nb_generation,pop_size):
     P=[] # enssemble des "parents" pour chaque generation
     # R=[] # enssemble créé avec parents + enfants donc de taille 2*N
 
-    # Appel fonction
-    POP_SIZE=100
-    Capacite_batterie = np.random.uniform(0, 200000, POP_SIZE)  # Capacité de la batterie (en kWh) objectif1
-    Chute_tension = np.random.uniform(0, 1e6, POP_SIZE)  # Chute de tension maximale (en V) objectif2  
-
-    pop_a=[[]]
-    for i in range(0,POP_SIZE):
-        pop_a[i][np.random.uniform(0, 200000, NB_SIMU),np.random.uniform(0, 1e6, NB_SIMU) ]
-               
-
+    capacite_bat = capacite_batterie.copy()
+    chute_ten = chute_tension.copy()
+    popoulation_i=  pop_size       
+    
     for i in range(nb_generation):
         # front de pareto
+        dv = monte_carlo(len(capacite_bat), capacite_bat, chute_ten, Pelec)
+        rang_i, capacite_i, seuil_i, dv_i = rang(capacite_bat, chute_ten, dv)
         o1=[]
         o2=[]
         for i in population:
@@ -515,8 +511,32 @@ def NGSA2(capacite_batterie,chute_tension,nb_generation,pop_size):
 
 
 
-# Fonctions qu'ont a besoin pour réaliser l'algorithme génétique
+# Fonctions qu'on a besoin pour réaliser l'algorithme génétique
 
+def rang(capacite_batterie, chute_tension, dv_max):
+    Cap_batt = []
+    Cap_batt.append(capacite_batterie.copy())
+    Chu_tension = []
+    Chu_tension.append(chute_tension.copy())
+    dv = []
+    dv.append(dv_max.copy())
+    rang_list = []
+
+    while Cap_batt[-1].size > 0:
+        test = find_non_dominated_solution(Cap_batt[-1], dv[-1],len(Cap_batt[-1]))
+        print(test)
+        rang_list.append(test)
+        Cap_batt.append(np.delete(Cap_batt[-1], rang_list[-1]))
+        Chu_tension.append(np.delete(Chu_tension[-1], rang_list[-1]))
+        dv.append(np.delete(dv[-1], rang_list[-1]))
+
+    print(rang_list)
+
+    return rang_list, Cap_batt, Chu_tension, dv
+
+
+rang_test, Test_Capacite, _, _ =rang(Capacite_batterie_random, Seuil_random, dV_max)
+print(Test_Capacite[0][rang_test[0]])
 
 
 def mutation(population, mutation_rate=0.5): 
