@@ -483,10 +483,9 @@ par un optimum local."""
 
 def NGSA2(nb_generation,pop_size):
     # Initialisation
-  
 
     mutation_rate=0.5
-    
+
     list_capacite_batterie=  np.random.uniform(0, 200000, pop_size)
     list_seuil=  np.random.uniform(0, 1e6, pop_size)
     
@@ -494,9 +493,9 @@ def NGSA2(nb_generation,pop_size):
     population=[]
     for i in range(0,pop_size):
         population.append([list_capacite_batterie[i],list_seuil[i]])
-    
+
     liste_generation.append(population)
-    
+
     for i in range(nb_generation):
         nouvelle_gen=[]
         capacite_bat=[]
@@ -558,12 +557,21 @@ def rang(capacite_batterie, chute_tension, dv_max):
 def mutation(population, mutation_rate):
     mu_rate1=mutation_rate
     mu_rate2=mutation_rate
+    cap = []
+    seuil = []
+    for pop in population:
+        cap.append(pop[0])
+        seuil.append(pop[1])
+    min_c = min(cap)
+    min_s = min(seuil)
+    max_c = max(cap)
+    max_s = max(seuil)
     for pop in population:
         if np.random.random() < mu_rate1: # pour le sueil
-            pop[1] = np.random.uniform(0, 1e6) # mutations aleatoire
+            pop[1] = np.random.uniform(min_s, max_s) # mutations aleatoire
 
         if np.random.random()<mu_rate2: # pour la capacite
-            pop[0] = np.random.uniform(0, 200000) # mutations aleatoire
+            pop[0] = np.random.uniform(min_c, max_c) # mutations aleatoire
     return population
 
 def croisement(parent1, parent2, nombre_croisement): # le rate 0.5 signifie une chance égale , 50% des cas --> croisement réalisé
