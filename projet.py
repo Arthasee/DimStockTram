@@ -488,26 +488,27 @@ def NGSA2(nb_generation,pop_size):
     mutation_rate=0.5
     
     list_capacite_batterie=  np.random.uniform(0, 200000, pop_size)
-    list_chute_tension=  np.random.uniform(0, 1e6, pop_size)
+    list_seuil=  np.random.uniform(0, 1e6, pop_size)
     
     liste_generation = []
     population=[]
     for i in range(0,pop_size):
-        population.append([list_capacite_batterie[i],list_chute_tension[i]])
+        population.append([list_capacite_batterie[i],list_seuil[i]])
     
     liste_generation.append(population)
     
     for i in range(nb_generation):
+        nouvelle_gen=[]
         capacite_bat=[]
-        chute_ten=[]
+        seuil_=[]
         # print(population[0])
         # séparer la capcite et la chute de tension dans deux list distintcs pour le monte carlo et rang
         for individu in population:
             capacite_bat.append(individu[0])
-            chute_ten.append(individu[1])
+            seuil_.append(individu[1])
         
-        dv = monte_carlo(len(capacite_bat), capacite_bat, chute_ten, Pelec) 
-        rang_li, cap_li, seuil_li, dv_li = rang(capacite_bat, chute_ten, dv)
+        dv = monte_carlo(len(capacite_bat), capacite_bat, seuil_, Pelec) 
+        rang_li, cap_li, seuil_li, dv_li = rang(capacite_bat, seuil_, dv)
         
         best_list= selection(rang_li,cap_li,seuil_li,pop_size)
         nb=len(best_list[0])
@@ -567,19 +568,21 @@ def mutation(population, mutation_rate):
     population_mutee=[[]]
     # pop_ret
     for pop in population:
-        if np.random.random() < mu_rate1+1: # pour le sueil
-            pop[0] = np.random.uniform(0, 1e6) # mutations aleatoire
+        if np.random.random() < mu_rate1: # pour le sueil
+            pop[1] = np.random.uniform(0, 1e6) # mutations aleatoire
             
         if np.random.random()<mu_rate2: # pour la capacite
-            pop[1] = np.random.uniform(0, 200000) # mutations aleatoire
+            pop[0] = np.random.uniform(0, 200000) # mutations aleatoire
             
         population_mutee.append(pop)
     return population_mutee
+
+
+
+
   
 
 def croisement(parent1, parent2, nombre_croisement): # le rate 0.5 signifie une chance égale , 50% des cas --> croisement réalisé
-    
-    
     new_individus=[[]] # a ajouter dans la nouvelle population apres l'appel des fonctions
     for i in range(0,nombre_croisement):
         # les parents 1 et 2 sont choisi aléatoirement dans la fonction principale
@@ -588,9 +591,9 @@ def croisement(parent1, parent2, nombre_croisement): # le rate 0.5 signifie une 
         indice_capacite= np.random.randint(2, 4) # 0 ou 1
         
         if indice_seuil==0:
-            new.append(parent1[0])
+            new.append(parent1[1])
         elif indice_seuil==1:
-            new.append(parent2[0])
+            new.append(parent2[1])
         if indice_capacite==2:
             new.append(parent1[0])
         if indice_capacite==3:
@@ -629,6 +632,10 @@ def selection(rang_l, cap_l, seuil_l, pop_size, distances = 1):
         selected.append([sel,selected_seuil[i]])
          
     return selected
+
+
+
+
 
 
 #test:  état selection FONCTIONNE
