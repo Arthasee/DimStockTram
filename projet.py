@@ -516,24 +516,24 @@ def NGSA2(nb_generation,pop_size):
         for i in range(0, nombre_enfant_souhaite):
             # i_parent1=int(np.random.randint(0,len(best_list)))
             # i_parent2=int(np.random.randint(0,len(best_list)))
-            
+
             new_enfant_croise= croisement(best_list,best_list,nombre_enfant_souhaite)
         nombre_mutation_souhaite=int(nb) # possible de modifier
         list_a_muter = choix(best_list, nombre_mutation_souhaite)
         enfants_mute=mutation(list_a_muter,mutation_rate)
         nouvelle_gen=best_list+new_enfant_croise+enfants_mute
-        
+
         while [] in nouvelle_gen:
             nouvelle_gen.remove([])
         population=copy.deepcopy(nouvelle_gen)
         liste_generation.append(population)
-     
+
     return population, liste_generation
 
 # Fonctions qu'on a besoin pour réaliser l'algorithme génétique
 
 def choix(liste_a_choix, nombre_mutation):
-    id = np.random.uniform(0, len(liste_a_choix), nombre_mutation)
+    id = np.random.randint(0, len(liste_a_choix), nombre_mutation)
     liste_a_muter = []
     for i, choixe in enumerate(liste_a_choix):
         if i in id:
@@ -583,7 +583,7 @@ def croisement(parent1, parent2, nombre_croisement): # le rate 0.5 signifie une 
         i2=int(np.random.randint(0,len(parent2)))
         indice_seuil= np.random.randint(0, 2) # 0 ou 1  parent 1 ou parent2
         indice_capacite= np.random.randint(2, 4) # 0 ou 1
-        
+       
         # if indice_capacite==2:
         #     new.append(parent1[0])
         # elif indice_capacite==3:
@@ -594,8 +594,10 @@ def croisement(parent1, parent2, nombre_croisement): # le rate 0.5 signifie une 
         #     new.append(parent2[1])
         
         if parent1[i1][0] > parent2[i2][0]:
+            # print(f'1 {parent1[i1][0], parent2[i2][0]}')
             new.append(np.random.randint(parent2[i2][0],parent1[i1][0]))
         elif parent1[i1][0] < parent2[i2][0]:
+            # print(f'2 {parent1[i1][0], parent2[i2][0]}')
             new.append(np.random.randint(parent1[i1][0],parent2[i2][0]))
         else :
             new.append(parent1[i1][0])
@@ -663,9 +665,11 @@ for gen in generation:
 # print(len(cap_ngsa2[0]))
 
 plt.figure()
-for i in range(len(cap_ngsa2)):
-    plt.scatter(cap_ngsa2[i], seuil_ngsa2[i], label = f'Génération {i}')
-plt.scatter(cap_ngsa2[-1], seuil_ngsa2[-1], marker =  "x",label = f'Génération {i}')
+for i, c in enumerate(cap_ngsa2):
+    if i == len(cap_ngsa2) - 1:
+        plt.scatter(c, seuil_ngsa2[i], marker =  "x",label = f'Génération {i}')
+    else:
+        plt.scatter(c, seuil_ngsa2[i], label = f'Génération {i}')
 
 plt.xlabel("Capacité")
 plt.ylabel("Seuil")
@@ -673,9 +677,11 @@ plt.legend()
 plt.show()
 
 plt.figure()
-for i in range(len(cap_ngsa2)):
-    plt.scatter(cap_ngsa2[i], dv_ngsa2[i], label = f'Génération {i}')
-plt.scatter(cap_ngsa2[-1], dv_ngsa2[-1],marker = "x", label = f'Génération {i}')
+for i, c in enumerate(cap_ngsa2):
+    if i == len(cap_ngsa2) - 1:
+        plt.scatter(c, dv_ngsa2[i],marker = "x", label = f'Génération {i}')
+    else :
+        plt.scatter(c, dv_ngsa2[i], label = f'Génération {i}')
 plt.xlabel("Capacité")
 plt.ylabel("Chute de Tension")
 plt.legend()
