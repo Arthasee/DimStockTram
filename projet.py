@@ -505,10 +505,10 @@ def NGSA2(nb_generation,pop_size):
         for individu in population:
             capacite_bat.append(individu[0])
             seuil_.append(individu[1])
-        
+
         dv = monte_carlo(len(capacite_bat), capacite_bat, seuil_, Pelec)
         rang_li, cap_li, seuil_li, dv_li = rang(capacite_bat, seuil_, dv)
-        
+
         best_list= selection(rang_li,cap_li,seuil_li,pop_size)
         nb= len(best_list)
         nombre_enfant_souhaite=int(nb) # donc moitie d'enfant creer par croisement, # possible de modifier
@@ -573,7 +573,7 @@ def croisement(parent1, parent2, nombre_croisement): # le rate 0.5 signifie une 
         new=[]
         i1=int(np.random.randint(0,len(parent1)))
         i2=int(np.random.randint(0,len(parent2)))
- 
+
         if parent1[i1][0] > parent2[i2][0]:
             new.append(np.random.randint(parent2[i2][0],parent1[i1][0]))
         elif parent1[i1][0] < parent2[i2][0]:
@@ -589,7 +589,7 @@ def croisement(parent1, parent2, nombre_croisement): # le rate 0.5 signifie une 
             new.append(parent1[i1][1])
 
         new_individus.append(new)
-      
+
     return new_individus
 
 def selection(rang_l, cap_l, seuil_l, pop_size, distances = 1):
@@ -603,26 +603,23 @@ def selection(rang_l, cap_l, seuil_l, pop_size, distances = 1):
     for i, rng in enumerate(rang_l):
         if len(selected_cap) + len(rng) < N:
             for r in rng:
-                selected_cap = selected_cap + [cap_l[i][r]]
-                selected_seuil = selected_seuil + [seuil_l[i][r]]
+                selected_cap = np.append(selected_cap, [[cap_l[i][r]]])
+                selected_seuil = np.append(selected_seuil, [[seuil_l[i][r]]])
         else:
             reste= N-len(selected_cap)
             j = 0
             while reste>0:
-                selected_cap = selected_cap + cap_l[i][rng[j]]
-                selected_seuil = selected_seuil + seuil_l[i][rng[j]]
+                selected_cap = np.append(selected_cap, [cap_l[i][rng[j]]])
+                selected_seuil = np.append(selected_seuil, [seuil_l[i][rng[j]]])
                 reste = reste - 1
                 j += 1
             break
     selected = []
+    print(selected_seuil)
     for i, sel in enumerate(selected_cap):
         selected.append([sel,selected_seuil[i]])
 
     return selected
-
-#test:  état selection FONCTIONNE
-# selectionne_test=selection([[1,2,3,4],[5,4,9,10]],0,10)
-# print(selectionne_test)
 
 poptest_final, generation=NGSA2(10,100)
 print(len(generation), len(generation[0]), len(generation[-1]))
@@ -633,10 +630,10 @@ dv_ngsa2 = []
 for gen in generation:
     cap = []
     seuil = []
-    dv = []
-    for i in range(len(gen)):
-        cap.append(gen[i][0])
-        seuil.append(gen[i][1])
+    dvv = []
+    for i, g in enumerate(gen):
+        cap.append(g[0])
+        seuil.append(g[1])
     cap_ngsa2.append(cap)
     seuil_ngsa2.append(seuil)
     dv_ngsa2.append(monte_carlo(len(cap),cap,seuil, Pelec))
