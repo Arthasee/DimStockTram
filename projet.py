@@ -506,7 +506,7 @@ def NGSA2(nb_generation,pop_size):
             capacite_bat.append(individu[0])
             seuil_.append(individu[1])
         
-        dv = monte_carlo(len(capacite_bat), capacite_bat, seuil_, Pelec) 
+        dv = monte_carlo(len(capacite_bat), capacite_bat, seuil_, Pelec)
         rang_li, cap_li, seuil_li, dv_li = rang(capacite_bat, seuil_, dv)
         
         best_list= selection(rang_li,cap_li,seuil_li,pop_size)
@@ -514,14 +514,11 @@ def NGSA2(nb_generation,pop_size):
         nombre_enfant_souhaite=int(nb) # donc moitie d'enfant creer par croisement, # possible de modifier
         new_enfant_croise=[]
         for i in range(0, nombre_enfant_souhaite):
-            # i_parent1=int(np.random.randint(0,len(best_list)))
-            # i_parent2=int(np.random.randint(0,len(best_list)))
-
             new_enfant_croise= croisement(best_list,best_list,nombre_enfant_souhaite)
         nombre_mutation_souhaite=int(nb) # possible de modifier
         list_a_muter = choix(best_list, nombre_mutation_souhaite)
-        enfants_mute=mutation(list_a_muter,mutation_rate)
-        nouvelle_gen=best_list+new_enfant_croise+enfants_mute
+        best_list=mutation(list_a_muter,mutation_rate)
+        nouvelle_gen=best_list+new_enfant_croise#+enfants_mute
 
         while [] in nouvelle_gen:
             nouvelle_gen.remove([])
@@ -538,7 +535,6 @@ def choix(liste_a_choix, nombre_mutation):
     for i, choixe in enumerate(liste_a_choix):
         if i in id:
             liste_a_muter.append([choixe[0],choixe[1]])
-            # liste_a_muter[1].append(choixe[1])
     return liste_a_muter
 
 def rang(capacite_batterie, chute_tension, dv_max):
@@ -562,17 +558,13 @@ def rang(capacite_batterie, chute_tension, dv_max):
 def mutation(population, mutation_rate):
     mu_rate1=mutation_rate
     mu_rate2=mutation_rate
-    population_mutee=[[]]
-    # pop_ret
     for pop in population:
         if np.random.random() < mu_rate1: # pour le sueil
             pop[1] = np.random.uniform(0, 1e6) # mutations aleatoire
-            
+
         if np.random.random()<mu_rate2: # pour la capacite
             pop[0] = np.random.uniform(0, 200000) # mutations aleatoire
-            
-        population_mutee.append(pop)
-    return population_mutee
+    return population
 
 def croisement(parent1, parent2, nombre_croisement): # le rate 0.5 signifie une chance égale , 50% des cas --> croisement réalisé
     new_individus=[[]] # a ajouter dans la nouvelle population apres l'appel des fonctions
@@ -581,23 +573,10 @@ def croisement(parent1, parent2, nombre_croisement): # le rate 0.5 signifie une 
         new=[]
         i1=int(np.random.randint(0,len(parent1)))
         i2=int(np.random.randint(0,len(parent2)))
-        indice_seuil= np.random.randint(0, 2) # 0 ou 1  parent 1 ou parent2
-        indice_capacite= np.random.randint(2, 4) # 0 ou 1
-       
-        # if indice_capacite==2:
-        #     new.append(parent1[0])
-        # elif indice_capacite==3:
-        #     new.append(parent2[0])
-        # if indice_seuil==0:
-        #     new.append(parent1[1])
-        # elif indice_seuil==1:
-        #     new.append(parent2[1])
-        
+ 
         if parent1[i1][0] > parent2[i2][0]:
-            # print(f'1 {parent1[i1][0], parent2[i2][0]}')
             new.append(np.random.randint(parent2[i2][0],parent1[i1][0]))
         elif parent1[i1][0] < parent2[i2][0]:
-            # print(f'2 {parent1[i1][0], parent2[i2][0]}')
             new.append(np.random.randint(parent1[i1][0],parent2[i2][0]))
         else :
             new.append(parent1[i1][0])
@@ -638,7 +617,7 @@ def selection(rang_l, cap_l, seuil_l, pop_size, distances = 1):
     selected = []
     for i, sel in enumerate(selected_cap):
         selected.append([sel,selected_seuil[i]])
-         
+
     return selected
 
 #test:  état selection FONCTIONNE
