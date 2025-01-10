@@ -501,7 +501,6 @@ def NGSA2(nb_generation,pop_size):
         nouvelle_gen=[]
         capacite_bat=[]
         seuil_=[]
-        # print(population[0])
         # séparer la capcite et la chute de tension dans deux list distintcs pour le monte carlo et rang
         for individu in population:
             capacite_bat.append(individu[0])
@@ -511,15 +510,15 @@ def NGSA2(nb_generation,pop_size):
         rang_li, cap_li, seuil_li, dv_li = rang(capacite_bat, seuil_, dv)
         
         best_list= selection(rang_li,cap_li,seuil_li,pop_size)
-        nb=len(best_list[0])
-        nombre_enfant_souhaite=int(nb/2) # donc moitie d'enfant creer par croisement, # possible de modifier
+        nb= len(best_list)
+        nombre_enfant_souhaite=int(nb) # donc moitie d'enfant creer par croisement, # possible de modifier
         new_enfant_croise=[]
         for i in range(0, nombre_enfant_souhaite):
-            i_parent1=int(np.random.randint(0,len(best_list)))
-            i_parent2=int(np.random.randint(0,len(best_list)))
+            # i_parent1=int(np.random.randint(0,len(best_list)))
+            # i_parent2=int(np.random.randint(0,len(best_list)))
             
-            new_enfant_croise= croisement(best_list[i_parent1],best_list[i_parent2],nombre_enfant_souhaite)
-        nombre_mutation_souhaite=int(nb/2) # possible de modifier
+            new_enfant_croise= croisement(best_list,best_list,nombre_enfant_souhaite)
+        nombre_mutation_souhaite=int(nb) # possible de modifier
         list_a_muter = choix(best_list, nombre_mutation_souhaite)
         enfants_mute=mutation(list_a_muter,mutation_rate)
         nouvelle_gen=best_list+new_enfant_croise+enfants_mute
@@ -530,8 +529,6 @@ def NGSA2(nb_generation,pop_size):
         liste_generation.append(population)
      
     return population, liste_generation
-
-
 
 # Fonctions qu'on a besoin pour réaliser l'algorithme génétique
 
@@ -577,34 +574,42 @@ def mutation(population, mutation_rate):
         population_mutee.append(pop)
     return population_mutee
 
-
-
-
-  
-
 def croisement(parent1, parent2, nombre_croisement): # le rate 0.5 signifie une chance égale , 50% des cas --> croisement réalisé
     new_individus=[[]] # a ajouter dans la nouvelle population apres l'appel des fonctions
     for i in range(0,nombre_croisement):
         # les parents 1 et 2 sont choisi aléatoirement dans la fonction principale
         new=[]
+        i1=int(np.random.randint(0,len(parent1)))
+        i2=int(np.random.randint(0,len(parent2)))
         indice_seuil= np.random.randint(0, 2) # 0 ou 1  parent 1 ou parent2
         indice_capacite= np.random.randint(2, 4) # 0 ou 1
         
-        if indice_seuil==0:
-            new.append(parent1[1])
-        elif indice_seuil==1:
-            new.append(parent2[1])
-        if indice_capacite==2:
-            new.append(parent1[0])
-        if indice_capacite==3:
-            new.append(parent2[0])
+        # if indice_capacite==2:
+        #     new.append(parent1[0])
+        # elif indice_capacite==3:
+        #     new.append(parent2[0])
+        # if indice_seuil==0:
+        #     new.append(parent1[1])
+        # elif indice_seuil==1:
+        #     new.append(parent2[1])
+        
+        if parent1[i1][0] > parent2[i2][0]:
+            new.append(np.random.randint(parent2[i2][0],parent1[i1][0]))
+        elif parent1[i1][0] < parent2[i2][0]:
+            new.append(np.random.randint(parent1[i1][0],parent2[i2][0]))
+        else :
+            new.append(parent1[i1][0])
+
+        if parent1[i1][1] > parent2[i2][1]:
+            new.append(np.random.randint(parent2[i2][1],parent1[i1][1]))
+        elif parent1[i1][1] < parent2[i2][1]:
+            new.append(np.random.randint(parent1[i1][1],parent2[i2][1]))
+        else :
+            new.append(parent1[i1][1])
 
         new_individus.append(new)
       
     return new_individus
-
-
-
 
 def selection(rang_l, cap_l, seuil_l, pop_size, distances = 1):
     # il faut selectionner 50% des meilleurs d'après le slide du projet
@@ -626,6 +631,7 @@ def selection(rang_l, cap_l, seuil_l, pop_size, distances = 1):
                 selected_cap = selected_cap + cap_l[i][rng[j]]
                 selected_seuil = selected_seuil + seuil_l[i][rng[j]]
                 reste = reste - 1
+                j += 1
             break
     selected = []
     for i, sel in enumerate(selected_cap):
@@ -633,19 +639,12 @@ def selection(rang_l, cap_l, seuil_l, pop_size, distances = 1):
          
     return selected
 
-
-
-
-
-
 #test:  état selection FONCTIONNE
 # selectionne_test=selection([[1,2,3,4],[5,4,9,10]],0,10)
 # print(selectionne_test)
 
-
-
-
 poptest_final, generation=NGSA2(10,100)
+print(len(generation), len(generation[0]), len(generation[-1]))
 cap_ngsa2 = []
 seuil_ngsa2 = []
 dv_ngsa2 = []
