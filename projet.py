@@ -498,6 +498,7 @@ def NGSA2(nb_generation,pop_size):
     liste_generation.append(population)
     
     for i in range(nb_generation):
+        nouvelle_gen=[]
         capacite_bat=[]
         chute_ten=[]
         # print(population[0])
@@ -569,14 +570,18 @@ def mutation(population, mutation_rate):
     population_mutee=[[]]
     # pop_ret
     for pop in population:
-        if np.random.random() < mu_rate1+1: # pour le sueil
-            pop[0] = np.random.uniform(0, 1e6) # mutations aleatoire
+        if np.random.random() < mu_rate1: # pour le sueil
+            pop[1] = np.random.uniform(0, 1e6) # mutations aleatoire
             
         if np.random.random()<mu_rate2: # pour la capacite
-            pop[1] = np.random.uniform(0, 200000) # mutations aleatoire
+            pop[0] = np.random.uniform(0, 200000) # mutations aleatoire
             
         population_mutee.append(pop)
     return population_mutee
+
+
+
+
   
 
 def croisement(parent1, parent2, nombre_croisement): # le rate 0.5 signifie une chance égale , 50% des cas --> croisement réalisé
@@ -631,6 +636,10 @@ def selection(rang_l, cap_l, seuil_l, pop_size, distances = 1):
         selected.append([sel,selected_seuil[i]])
          
     return selected
+
+
+
+
 
 
 #test:  état selection FONCTIONNE
