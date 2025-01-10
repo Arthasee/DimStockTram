@@ -402,7 +402,7 @@ Seuil_random = np.random.uniform(0, 1e6, NB_SIMU)
 #     print(vtrainbatt)
 #     dV_max.append(VSST - np.min(vtrainbatt))
 
-# dV_max=monte_carlo(NB_SIMU,Capacite_batterie_random,Seuil_random,Pelec)
+dV_max=monte_carlo(NB_SIMU,Capacite_batterie_random,Seuil_random,Pelec)
 # Solutions_non_dominees=find_non_dominated_solution(Capacite_batterie_random ,dV_max,NB_SIMU)
 
 
@@ -549,7 +549,7 @@ def rang(capacite_batterie, chute_tension, dv_max):
     Chu_tension = []
     Chu_tension.append(chute_tension.copy())
     dv = []
-    dv.append(dv_max.copy())
+    dv.append(np.array(dv_max.copy()))
     rang_list = []
 
     while len(Cap_batt[-1]) > 0:
@@ -560,8 +560,6 @@ def rang(capacite_batterie, chute_tension, dv_max):
         dv.append(np.array(np.delete(dv[-1], rang_list[-1])))
 
     return rang_list, Cap_batt, Chu_tension, dv
-
-# rang_test, Test_Capacite, _, _ =rang(Capacite_batterie_random, Seuil_random, dV_max)
 
 def mutation(population, mutation_rate):
     mu_rate1=mutation_rate
@@ -661,6 +659,8 @@ for gen in generation:
 plt.figure()
 for i in range(len(cap_ngsa2)):
     plt.scatter(cap_ngsa2[i], seuil_ngsa2[i], label = f'Génération {i}')
+plt.scatter(cap_ngsa2[-1], seuil_ngsa2[-1], marker =  "x",label = f'Génération {i}')
+
 plt.xlabel("Capacité")
 plt.ylabel("Seuil")
 plt.legend()
@@ -669,6 +669,7 @@ plt.show()
 plt.figure()
 for i in range(len(cap_ngsa2)):
     plt.scatter(cap_ngsa2[i], dv_ngsa2[i], label = f'Génération {i}')
+plt.scatter(cap_ngsa2[-1], dv_ngsa2[-1],marker = "x", label = f'Génération {i}')
 plt.xlabel("Capacité")
 plt.ylabel("Chute de Tension")
 plt.legend()
@@ -684,10 +685,6 @@ plt.show()
 # def distance_encombrement(population):
     
 #     return 1
-
-
-population_test = NGSA2(7, 100)
-print(len(population_test[-1]))
 
 
 # def voir_convergence():
